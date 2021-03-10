@@ -10,8 +10,15 @@
 ##Required Libraries
 You will need the repository that contains PythonLib.  You can find
 this at https://github.com/DonaldWL/PythonLib
+
+##TODO
+I have not completed the Linux side of the examples.  I currently do
+not have access to a Linux machine.  Thus, the C and CPP examples have
+not been compiled under Linux.  The basic state machine should not have
+an issue, but some of the other files to support the user side of the
+state machine need to be coded up and tested.
+
 ##Packages And Files 
-  
 ###Examples
   Contains all the examples for C, CPP, and Python.  See the help files.
     
