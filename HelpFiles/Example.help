@@ -1,0 +1,50 @@
+The examples show how you can have one SMS files and create
+a state machine for C, CPP and Python.  The C and CPP example
+do not have any base files that are contained within the
+StateMachine package.  Python on the other hand has a base
+class that you can use to create your python state machine.
+See 'StateMachine.PythonBase' and its help file.
+
+All the examples only contain TPL files, under each example
+you will find a directory called TPL.  That is the TPL
+files that are used to generate the STM results, your state
+machine.
+
+The C example has a lot of support files.  Most these support
+files are only for the implementation of the user code in the
+state machine, not for the state machine.  Review the help
+file ExampleC.help for more details and also review all of the
+code.
+
+The CPP example also has a few support files.  Just like
+the C example most are for the user code.  It does also
+have a module for exceptions that are used by the state 
+machine.  See the help file for CPP example and review all of
+the code.
+
+The Python example does not have any support files, but does
+use 'StateMachine.PythonBase.StateMachine'.  Review the help
+file for Python example, PythonBase and review all the code
+for the example.
+
+You may be wondering why would I write code using a state machine.
+In most causes you would not.  But state machines keep track of
+the state of your program and allow you to transition very fast.
+Also each block of code for a state is normally small and simple.
+Your main logic is in the transitions of states.  State machines
+are used heavily for protocol's.  This is how I wrote the protocol's
+for a company I worked for.  
+
+You may be wondering, why have a generator for the tables and the 
+like for the state machine.  The tables for C and CPP are a pain
+to put together and not make a mistake.  For python its not as 
+hard to put the tables together.  But for C and CPP to many errors.
+
+I would recommend that you do more reading on state machines.  Its 
+good to understand this technology, even if you do not use it.  It
+help you understand your standard programs better.  
+
+All programs have states.  Not necessarily using a table, but while
+your program is running its data set is in a certain state and the
+code works on that data set at that point, thus changing the data
+set and thus changing the state of the program.

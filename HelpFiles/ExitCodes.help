@@ -1,0 +1,9 @@
+Exit Code:
+
+  OK           = 0
+  HELP         = 2
+  INVALIDARGS  = 3
+  SMSERROR     = 4
+  FILENOTFOUND = 5
+  ISDIR        = 6
+  ISNOTDIR     = 7

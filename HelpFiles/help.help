@@ -1,0 +1,11 @@
+help
+  Gives you help on topics.  This command will exit the program
+  with a exit code of 2
+
+  --help (-h) [<topic> [<topic>]...]
+  
+    <topic> is a command or a general topic.  To get all the
+    commands use '--help [usagedetail|u]'.    Below is a list of
+    the general topics:  
+    
+      @@@HelpTopics,65@@@@

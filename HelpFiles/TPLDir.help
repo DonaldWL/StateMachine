@@ -1,0 +1,6 @@
+<TPLDir>
+
+  This is the location that has all your TPL files that define
+  your state machine.  The Generator package uses these along
+  with the output of the SMS package to create you state machine.
+  Look at the topics 'SMS' and 'Generator'.

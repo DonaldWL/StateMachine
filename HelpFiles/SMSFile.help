@@ -1,0 +1,5 @@
+<SMSFile>
+
+  This is the SMS file that is used by the SMS system to create 
+  internal tables that can be used to generate a state machine.
+  For details on what an SMS file is see the topic 'SMS'.

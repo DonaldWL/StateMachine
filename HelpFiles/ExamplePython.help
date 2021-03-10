@@ -1,0 +1,64 @@
+You can find this example at 'StateMachine/Examples/ExamplePython'.  The only 
+directory that contains files is TPL.  
+
+ExamplePython shows you how to create TPL files for the Python language.  Below is a
+list of the files and what they are for.
+
+  PythonExample.py
+    This is the main for the program
+  TheStateMachine.py
+    This is the state machine
+    
+Python is a bit different than C and CPP.  It does not have a switch statement, thus
+we will use a table that will have the code for each code block compiled into the table
+and execute the code from that table.
+
+It also uses a base class 'StateMachine.PythonBase'.  This class is what runs the 
+state machine and executes the code blocks.  Python is slow, so doing a state machine
+in python is not really recommended, but its a good language to play with a state 
+machine and understand how they work.
+
+The same SMS file is used for C, CPP, and Python.  SMS does not really care about the
+language, the generator does.
+
+It is recommended that you use methods and not compiled code blocks in python.  The only
+reason is its hard to debug and I have come across several bugs in the python 'compile'
+statement.  Simple blocks work real well but large blocks have issues from time to time.
+
+The two tables that are required for the basic state machine are 'StateTable' and 
+'CodeBlockTable'.  The 'StateTable' is a lot like the C and CPP table.  Below is
+and entry from this table.
+
+  STEntryDef(CBB.CloseFiles, (STT.NextFile, STT.EndState, STT.EndState), -1),  # CloseFiles
+  
+STEntryDef is a 'namedtuple' from 'collections'.  If you have not used this before read
+up on it, its a nice library.  The first item is the code block to execute for this 
+state.  It is the entry in 'CodeBlockTable' table that contains the code.  The tuple
+that follows is the states to transition to.  This state has three entries.  You set 
+'self.StateRValue' to a value and it is used to index into this tuple.  The '-1' is
+the otherwise.  If the state has an otherwise defined then this would be the state
+to transition to if 'self.StateRValue' we not in the range of the transition tuple.
+
+The code block table is a very simple table of code to execute for a code block.  It
+is recommended that you use methods and not code blocks, because of how 'compile' 
+statement works.  Below is an example entry.
+
+  CBEntryDef(CBB.StartMachine, compile(self.__StartMachine__, MFName, "exec")))
+  
+The first entry is used for tracing only.  The second entry is using the python
+'compile' statement.  It compiles the code in the string 'self.__StartMachine__.
+You have two ways to handle this, one is this string has all your code in it or
+its just a call to a method that does the work.  Recommend you just have this
+as a call to the method.
+
+If you have the generator create your state machine it can create these
+strings for you.  How it works is it takes your code block name and add
+the '__' to the front and end.  You still have to write your methods.  The
+example is using this style.
+  
+How the state machine works is it looks in the table to find the entry into the
+code block table and then executes the compiled code.  Very simple, but like
+stated before this is a lot slower than C and CPP, but a good way to play
+with a state machine with a very high level language.
+  
+Review the code its not very complicated.
