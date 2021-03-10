@@ -6,11 +6,20 @@ search's for the tags and executes the code that is related to the tag.
 Thus, you can have the tag in a string, in a comment....  
 
 One mandatory requirement for each TPL file is the first line must
-contain the language that the file is for.
+contain the language that the file is for or a special tag.
 
   @@C@@
+    File is for C
   @@CPP@@
+    File is for CPP
   @@Python@@
+    File is for Python
+  @@CopyFile@@
+    Only copy the file do not process for tags.  It only removes the
+    first line.
+  @@SkipFile@@
+    Ignore this file, do not copy or process.  Leaves file as it in
+    the TPL dir and does not copy the file to the STM diretory.
   
   To stop syntax errors put this in a comment on the first line of the
   file.  It will not show up in the STM files.

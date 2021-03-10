@@ -78,6 +78,7 @@ class _CBase(ABC):
     self._STMFileName = None
     self._CmdExec = {}
     self._CmdExecEntry = None
+    self._CopyFileOnly = False
     
     self._TPLFilesToProcess = [os.path.join(TPLDir, f) for f in os.listdir(self._TPLDir) 
                                 if os.path.isfile(os.path.join(self._TPLDir, f)) and f[0] != '.']
@@ -90,6 +91,7 @@ class _CBase(ABC):
     This is called to process all the TPL files.
     '''
     for self._TPLFileName in self._TPLFilesToProcess:
+      self._CopyFileOnly = False
       self._STMFileName = os.path.join(self._STMDir, os.path.split(self._TPLFileName)[1])
       if os.path.exists(self._STMFileName):
         if not self._OverWrite:
@@ -107,7 +109,10 @@ class _CBase(ABC):
               try:
                 for self._TplLine in TPLFileFh:
                   try:
-                    self._ProcessLine()
+                    if self._CopyFileOnly:
+                      self._STMFileFh.write(self._TplLine)
+                    elif not self._ProcessLine():
+                      break
                   except (IOError, SystemError) as err:
                     raise GenException("Write Error on STM {0} => {1}".format(self._STMFileName, str(err))) from err
               except (IOError, SystemError) as err:
@@ -133,24 +138,33 @@ class _CBase(ABC):
   
       # Make sure the language is valid
     if self._TPLLineCnt == 1:
+      if self._Cmd == 'CopyFile':
+        self._CopyFileOnly = True
+        Msg = 'Warning: Copying File {0} no tag processing\n'
+        self._LogFh.write(Msg.format(self._TPLFileName))
+        return True
+      if self._Cmd == 'SkipFile':
+        Msg = 'Warning: Skipping file {0}\n'
+        self._LogFh.write(Msg.format(self._TPLFileName))
+        return False
+      
       if self._Cmd not in LanguagesSupported:
-        Msg = 'Error: The language {0} in TPL file {2} is not supported, validate entries are {1}\n'
+        Msg = 'Error: The language {0} in TPL file {2} is not supported, validate entries are {1} Skipping file\n'
         self._LogFh.write(Msg.format(self._Cmd, LanguagesSupported, self._TPLFileName))
-        return
+        return False
       
       ParamList = []
       for Param in self._SMSResult.Language.Params:
         ParamList.append(Param.Param)
-     
       if self._Cmd not in ParamList:
-        Msg = 'Error: Language {0} in TPL file {3} does not match the SMS file ({1})\n'
+        Msg = 'Error: Language {0} in TPL file {3} does not match the SMS file ({1}) Skipping file\n'
         self._LogFh.write(Msg.format(self._Cmd, ', '.join(ParamList), self._TPLFileName))
-        return
+        return False
         
       if not self._Cmd == self._Language:
         raise GenException('Language {0} in TPL file is not {1}'.format(self._Cmd, self._Language))
       self._FileLanguage = self._Cmd
-      return
+      return True
   
     if self._Cmd:
       self._ForcedOffset = self._StrtCmdOffset
@@ -173,6 +187,8 @@ class _CBase(ABC):
         self._LogFh.write(Msg.format('@@' + self._Cmd + '@@', self._TPLFileName))
     else:
       self._STMFileFh.write(self._TplLine)
+      
+    return True
 
     #--------------------------------------------------------------------------
   def _CreationDate(self):
