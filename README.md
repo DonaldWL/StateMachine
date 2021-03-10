@@ -6,10 +6,13 @@
  The program that can be used to generate the state machines for the
  examples is 'Gen.py'.  It also has the ability to display all the
  help files under 'HelpFiles'.
- 
- The following are the files and directories that make up this package.
- 
-##Examples
+
+##Required Libraries
+You will need the repository that contains PythonLib.  You can find
+this at https://github.com/DonaldWL/PythonLib
+##Packages And Files 
+  
+###Examples
   Contains all the examples for C, CPP, and Python.  See the help files.
     
     HelpFiles
@@ -17,14 +20,14 @@
       ExampleC.help
       ExampleCPP.help
       ExamplePython.help
-##Generator
+###Generator
   This package is used to generate the state machine from your TPL files.  See the help files.
     
     HelpFiles
       Generotr.help
-##HelpFiles
+###HelpFiles
   This directory contains all the help files.  This is based on 'PythonLib.Help'.
-##PythonBase
+###PythonBase
   This package is used to create python based state machines.  See the help files
     
     HelpFiles
