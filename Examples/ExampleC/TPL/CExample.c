@@ -1,4 +1,4 @@
-//@@C@@
+/*@@C@@*/
 /*
 SMS User Author:  @@SMSUserAuthor@@
 SMS User Date:    @@SMSUserDate@@
@@ -52,40 +52,47 @@ static void FileDListDeleter(void *_userData) {
 
 int main()
 {
-  char *InFileDir = RealPath(".\\");               // Free memory
-  char *OutFileDir = RealPath(".\\CopiedFiles\\"); // Free memory
-  char *LogFileName = RealPath("..\\StateMachine.log\\"); // Free Memory
+  char *InFileDir = RealPath("../../StateMachine/Examples/ExampleC/STM"); /* Free memory  */
+  char *OutFileDir = RealPath("./CopiedFiles"); /* Free memory */
+  char *TraceLogFileName = RealPath("./StateMachineTrace.log"); /* Free Memory */
+  char *LogFileName = RealPath("./StateMachine.log"); /* Free Memory */
   FILE *TraceFh = NULL;
-  CvtrValueDef *CvtrValues;                        // Free memory
+  FILE *LogFh = NULL;
+  CvtrValueDef *CvtrValues;                        /* Free memory */
   ReturnValueDef *ReturnValue;
+  bool TraceFriendly = false;
+  bool ForceOverwrite = false;
 
   if (FileExist(OutFileDir) && !IsDir(OutFileDir)) {
     printf_s("CopiedFiles exists and is not a directory");
     exit(5);
   }
 
-  if (FileExist(OutFileDir)) {
-    DListDef *DFileList = NULL;  // Free memroy
+    /* If we are not going to do a overwrite then lets clear it out */
+  if (!ForceOverwrite && FileExist(OutFileDir)) {
+    DListDef *DFileList = NULL;  /* Free memroy */
     DFileList = ListFromDir(OutFileDir, StoreFile);
-    char *FileName;
-    while ((FileName = (char *)ReadDList(DFileList)) != NULL) {
-      char *FullFileName = JoinPath(OutFileDir, FileName);
-      if (IsDir(FullFileName)) {
-        printf_s("Cannot remove %s because it contains a directory %s\n", OutFileDir, FileName);
-        exit(6);
+    if (DFileList != NULL) {
+      char *FileName;
+
+        /* Make sure we do not have dirs in this directory, if fail */
+      while ((FileName = (char *)ReadDList(DFileList)) != NULL) {
+        if (IsDir(FileName)) {
+          printf_s("Cannot remove %s because it contains a directory %s\n", OutFileDir, FileName);
+          exit(6);
+        }
       }
-      free(FullFileName);
-    }
-    while ((FileName = (char *)ReadDList(DFileList)) != NULL) {
-      char *FullFileName = JoinPath(OutFileDir, FileName);
-      int ret = remove(FullFileName);
-      if (ret != 0) {
-        char ErrText[1024];
-        strerror_s(ErrText, 1024, errno);
-        printf_s("Cannot remove %s because %s\n", FullFileName, ErrText);
-        exit(7);
+
+        /* No dirs, lets delete all the files */
+      while ((FileName = (char *)ReadDList(DFileList)) != NULL) {
+        int ret = remove(FileName);
+        if (ret != 0) {
+          char ErrText[1024];
+          strerror_s(ErrText, 1024, errno);
+          printf_s("Cannot remove %s because %s\n", FileName, ErrText);
+          exit(7);
+        }
       }
-      free(FullFileName);
     }
     char *ErrText = RemoveDir(OutFileDir);
     if (ErrText != NULL) {
@@ -97,20 +104,28 @@ int main()
     DropDList(DFileList, FileDListDeleter);
   }
 
-  CreateDir(OutFileDir);
+  if (!FileExist(OutFileDir)) CreateDir(OutFileDir);
 
-  errno_t err = fopen_s(&TraceFh, LogFileName, "w");
+    /* We should check the errors. */
+  errno_t err = fopen_s(&TraceFh, TraceLogFileName, "w");
+  err = fopen_s(&LogFh, LogFileName, "w");
 
+    /* Lets do the run and capture how long it took */
   clock_t begin = clock();
-  ReturnValue = ST_Run(InFileDir, OutFileDir, false, TraceFh, true);
+  ReturnValue = ST_Run(InFileDir, OutFileDir, ForceOverwrite, TraceFh, TraceFriendly, LogFh);
   clock_t end = clock();
   CvtrValues = ConvertMilliseconds(end - begin, true);
   printf("%uw %ud %uh %um %us %ums\n", CvtrValues->weeks, CvtrValues->days, CvtrValues->hours,
          CvtrValues->minutes, CvtrValues->seconds, CvtrValues->milliseconds);
 
-    // This is not needed but good practice for C programming.
+    /* Close the log files */
+  fclose(TraceFh);
+  fclose(LogFh);
+
+    /* This is not needed but good practice for C programming. */
   free(InFileDir);
   free(OutFileDir);
+  free(TraceLogFileName);
   free(LogFileName);
   free(CvtrValues);
   ST_CleanReturnValue(ReturnValue);

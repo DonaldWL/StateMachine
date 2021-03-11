@@ -1,4 +1,4 @@
-//@@CopyFile@@
+/*@@CopyFile@@*/
 /*
 SMS User Author:  @@SMSUserAuthor@@
 SMS User Date:    @@SMSUserDate@@
@@ -56,15 +56,17 @@ typedef struct {
   int64_t milliseconds;
 } CvtrValue64Def;
 
-  // Converts milliseconds into CvtrValueDef.  It overflows at after
-  // 3w 3d 20h 31m 23s 647ms.  If you need more than this then use
-  // ConvertMilliseconds64.  You are responsible for the memory 
-  // allocated that is returned.  When you are done free CvtrValueDef.
+  /* Converts milliseconds into CvtrValueDef.  It overflows at after
+   * 3w 3d 20h 31m 23s 647ms.  If you need more than this then use
+   * ConvertMilliseconds64.  You are responsible for the memory
+   * allocated that is returned.  When you are done free CvtrValueDef.
+   */
 extern CvtrValueDef *ConvertMilliseconds(const clock_t _milliseconds, bool _week);
 
-  // Converts milliseconds into CvtrValue64Def.  You are responsible for the
-  // memory allocated that is returned.  When you are done free CvtrValue64Def. 
-  // This one has less of a limitation because of the large 64bit number.
+  /* Converts milliseconds into CvtrValue64Def.  You are responsible for the
+   * memory allocated that is returned.  When you are done free CvtrValue64Def.
+   * This one has less of a limitation because of the large 64bit number.
+   */
 extern CvtrValue64Def *ConvertMilliseconds64(const int64_t _milliseconds, bool _week);
 
 #ifdef __cplusplus

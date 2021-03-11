@@ -1,4 +1,4 @@
-//@@CopyFile@@
+/*@@CopyFile@@*/
 /*
 SMS User Author:  @@SMSUserAuthor@@
 SMS User Date:    @@SMSUserDate@@
@@ -27,21 +27,7 @@ CopyRight:
 -----------------------------------------------------------------------------
 Description:
 
-  Some stuff to handle strings
------------------------------------------------------------------------------
-*/
-/*
-SMS User Author:  Donald W. Long
-SMS User Date:    01/22/2021
-SMS User Version: 1.0
-Creation Date:    03/07/21
-SMS File Version: 1.0
-TPL Date:         02/11/2021
-TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
------------------------------------------------------------------------------
-Description:
-
-  Some stuff to handle strings
+  Some functions to help with managing strings.
 -----------------------------------------------------------------------------
 */
 #include <stdarg.h>
@@ -50,11 +36,21 @@ Description:
 
 #include "String.h"
 
-// This is how big each block length is.  When more
-// memory is needed it is allocated in this increament.
+  /* This is how big each block length is.  When more
+   * memory is needed it is allocated in this increament.
+   */
 #define STRINGBLOCKLEN 128
 
 char *StringBuild(char *_msg, const int _stringCnt, ...)
+{
+  va_list args;
+  va_start(args, _stringCnt);
+  _msg = StringBuildVaList(_msg, _stringCnt, args);
+  va_end(args);
+  return _msg;
+}
+
+char *StringBuildVaList(char *_msg, const int _stringCnt, va_list args)
 {
   char *string;
   size_t stringLen;
@@ -62,10 +58,8 @@ char *StringBuild(char *_msg, const int _stringCnt, ...)
   size_t MsgBlockLen;
   size_t NewMsgBlockLen;
 
-  va_list args;
-  va_start(args, _stringCnt);
 
-    // Setup the Msg.
+    /* Setup the Msg. */
   if (_msg == NULL) {
     _msg = malloc(STRINGBLOCKLEN);
     _msg[0] = '\0';
@@ -76,12 +70,12 @@ char *StringBuild(char *_msg, const int _stringCnt, ...)
     MsgBlockLen = ((MsgLen / STRINGBLOCKLEN) + 1) * STRINGBLOCKLEN;
   }
 
-    // Loop thru all the args
+    /* Loop thru all the args */
   for (int i = 0; i < _stringCnt; i++) {
     string = va_arg(args, char *);
     stringLen = strlen(string);
 
-      // See if we need to increase are string size.
+      /* See if we need to increase are string size. */
     NewMsgBlockLen = MsgBlockLen;
     for (; MsgLen + stringLen + 1 > NewMsgBlockLen; NewMsgBlockLen += STRINGBLOCKLEN);
     if (MsgLen + stringLen + 1 > MsgBlockLen) {
@@ -92,7 +86,7 @@ char *StringBuild(char *_msg, const int _stringCnt, ...)
       _msg = NewMsg;
     }
 
-      // Concat the new string to the old string.
+      /* Concat the new string to the old string. */
     memcpy(&_msg[MsgLen], string, stringLen);
     _msg[MsgLen + stringLen] = '\0';
     MsgLen += stringLen;

@@ -1,4 +1,4 @@
-//@@CopyFile@@
+/*@@CopyFile@@*/
 /*
 SMS User Author:  @@SMSUserAuthor@@
 SMS User Date:    @@SMSUserDate@@
@@ -270,10 +270,12 @@ DListDef *ListFromDir(const char *_path, bool(*_storeFile)(const char *))
   dwError = GetLastError();
   if (dwError == ERROR_SUCCESS) {
     do {
-      if (_storeFile == NULL || (*_storeFile)(ffd.cFileName)) {
-        Msg = StringBuild(NULL, 1, ffd.cFileName);
-        PushDList(DList, Msg);
-      }
+      char *FileName = JoinPath(_path, ffd.cFileName);
+
+      if (_storeFile == NULL || (*_storeFile)(FileName)) {
+        PushDList(DList, FileName);
+      } else free(FileName);
+
     } while (FindNextFileA(hFind, &ffd) != 0);
   }
   dwError = GetLastError();
