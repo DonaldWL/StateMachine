@@ -37,30 +37,40 @@ from PythonLib.Base.CodeTimer import (CCaptureTimer, CCodeTimer)
 from TheStateMachine import CTheStateMachine
 
 if __name__ == "__main__":
-  
-    # Setup a log file
-  LogFileName = os.path.join(os.getcwd(), 'StateMachine.log')
+  InFileDir = os.path.join(os.getcwd(), ".")
+  OutFileDir = os.path.join(os.getcwd(), "./CopiedFiles")
+  TraceFileName = os.path.join(os.getcwd(), "../StateMachineTrace.log")
+  LogFileName = os.path.join(os.getcwd(), "../StateMachine.log")
+  TraceFileFh = None
+  LogFileFh = None
+  TraceFriendly = False
+  ForceOverwrite = False
+    
+    # Setup the trace and logging, should do error handling
+  TraceFileFh = open(TraceFileName, 'w')
   LogFileFh = open(LogFileName, 'w')
 
     # Make sure our copy dir exists and it empty.
-  CPFDir = '../CopiedFiles'
-  if os.path.exists(CPFDir):
-    if not os.path.isdir(CPFDir):
-      print("CopiedFiles exists and is not a directory")
+  if os.path.exists(OutFileDir): 
+    if not os.path.isdir(OutFileDir):
+      print("OutFileDir exists and is not a directory")
       sys.exit(5)
       
-    for file in [os.path.join(CPFDir, f) for f in os.listdir(CPFDir) 
-                   if os.path.isfile(os.path.join(CPFDir, f)) and f[0] != '.']:
-      os.remove(file)
-  else:
-    os.mkdir(CPFDir)
+      # If we are not going to do a overwrite then lets clear it out
+    if (not ForceOverwrite and os.path.exists(OutFileDir)):
+      for file in [os.path.join(OutFileDir, f) for f in os.listdir(OutFileDir) 
+                     if os.path.isfile(os.path.join(OutFileDir, f)) and f[0] != '.']:
+        os.remove(file)
+      os.remdir(OutFileDir)
+  os.mkdir(OutFileDir)
 
     # Create State Machine
-  StateMachine = CTheStateMachine(InFileDir = '../',
-                                  OutFileDir = CPFDir,
-                                  ForceOverwrite = False,
-                                  TraceFile = LogFileFh, 
-                                  FriendlyTrace = False)
+  StateMachine = CTheStateMachine(InFileDir = InFileDir,
+                                  OutFileDir = OutFileDir,
+                                  ForceOverwrite = ForceOverwrite,
+                                  TraceFileFh = TraceFileFh, 
+                                  FriendlyTrace = TraceFriendly,
+                                  LogFileFh = LogFileFh)
   CaptureTimer = CCaptureTimer()
   rvalue = 0
   
@@ -69,10 +79,9 @@ if __name__ == "__main__":
   with CCodeTimer("StateRun", CaptureTimer):
     rvalue = StateMachine.Run()
 
-  LogFileFh.close()
+  TraceFileFh.close()
   
   print("\nState machine ended with ({0})".format(rvalue))
-  print("State machine states processed ({0})".format(StateMachine.StatesProcessed))
   print("State machine duration ({0}ms)".format(CaptureTimer.Took))
   print("-" * 50)
   

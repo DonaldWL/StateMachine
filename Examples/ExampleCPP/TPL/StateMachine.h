@@ -79,48 +79,79 @@ Description:
 class CStateMachine
 {
 public:
-    unsigned long long StatesProcessed = 0;
+  std::filesystem::path InFileDir;
+  std::filesystem::path InFileName;
+  std::ifstream InFileFh;
+  std::filesystem::path OutFileDir;
+  std::filesystem::path OutFileName;
+  std::ofstream OutFileFh;
+  bool ForceOverwrite;
+  std::ostream *TraceFh;
+  bool TraceFriendly;
+  std::list <std::filesystem::path> Files;
+  std::ostream *LogFileFh;
+  bool Error = false;
 
-    std::filesystem::path InFileDir;
-    std::filesystem::path InFileName;
-    std::ifstream InFileFh;
-    std::filesystem::path OutFileDir;
-    std::filesystem::path OutFileName;
-    std::ofstream OutFileFh;
-    bool ForceOverwrite;
-    std::ostream *TraceFh;
-    bool TraceFriendly;
-    std::list <std::filesystem::path> Files;
-    bool Error = false;
+    // Used in ReturnValueDef.
+  enum MO {
+    MO_Ok = 0,                   // ST OK
+    MO_CodeBlockInvalid = 1,     // Code Block is invalid.
+    MO_ExitedMainLoop = 2,       // Exited main while loop.
+    MO_StateRValueInvalid = 3,   // State RValue is negative.
+    MO_NoOtherWise = 4,          // No Otherwise defined and StateRValue out of range.
+    MO_NextStateIndxInvalid = 5  // The state index from the table is out of range of
+                                 // the state table.
+  };
 
-    CStateMachine(std::filesystem::path InFileDir, std::filesystem::path OutFileDir, bool ForceOverwrite = false,
-                  std::ostream *TraceFh = nullptr, bool TraceFriendly = false) :
-                    InFileDir(InFileDir), OutFileDir(OutFileDir), ForceOverwrite(ForceOverwrite),
-                    TraceFh(TraceFh), TraceFriendly(TraceFriendly) {};
+    // This is returned from Run.
+    //   MachineRValue
+    //     Is the outcome from the state machine.  See
+    //     enum MO for valid values
+    //   Msg
+    //     If not NULL is the message about the issue.
+    //   UserRValue
+    //     Is the user value that they wish to return.
+    //     If the user code does not set this it will be
+    //     -1.
+    //   UserData
+    //     Is the user date they wish to return.  This is
+    //     a void pointer.  You will have to cast this.  If
+    //     the user does not set this it will be NULL.
+  struct {
+    enum MO MachineRValue;
+    std::string Msg;
+    int UserRValue;
+    std::string UserData;
+  } ReturnValue;
 
+  // Constructor for the class.
+  //
+  //   _InFileDir
+  //     Is the directory to copy from.  Does not have to be fully qualified
+  //   _OutFileDir
+  //     Is the directory to copy to.  Does not have to be fully qualified
+  //   _ForcOverwrite
+  //     If true write over the _OutFileDir files without prompting.
+  //   _TraceFh
+  //     If not equal to NULL then trace the state machine.
+  //   _TraceFriendly
+  //     If true will outpu a friendly type trace, but takes up a lot of
+  //     space.  For log files recommend this to be false.
+  //   _LogFh
+  //     If not equal to NULL then log what the user code is doing.
+  CStateMachine(std::filesystem::path InFileDir, std::filesystem::path OutFileDir, bool ForceOverwrite,
+                std::ostream *TraceFh, bool TraceFriendly, std::ostream *LogFileFh) :
+                  InFileDir(InFileDir), OutFileDir(OutFileDir), ForceOverwrite(ForceOverwrite),
+                  TraceFh(TraceFh), TraceFriendly(TraceFriendly), LogFileFh(LogFileFh) {};
+
+    // This is how you run the statemachine.  When it returns you need to validate
+    // its outcome.  To check its results, see ReturnValue
   int Run(void);
-
-  int CloseFiles(void) {
-    if (InFileFh.is_open()) {
-      InFileFh.close();
-    }
-    if (OutFileFh.is_open()) {
-      OutFileFh.close();
-    }
-    return(0);
-  }
-
-  void PrintError(std::string &ErrMsg) {
-    Error = true;
-    std::cout << "ERROR: " << ErrMsg << std::endl;
-  }
-
-  void PrintWarning(std::string &WarningMsg) {
-    std::cout << "WARNING: " << WarningMsg << std::endl;
-  }
 
 private:
   CStateMachine();
+
+  void Log(const char *_MsgType, int _ArgCnt, ...);
 
 //@@CodeBlockNames@@
 

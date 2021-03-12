@@ -38,39 +38,52 @@ Description:
 #include "StateMachine.h"
 
 int main(int argc, const char* argv[]) {
-  std::filesystem::path InFileDir = "./";
-  std::filesystem::path OutFileDir = "./CopiedFiles";
-  std::filesystem::path LogFileName = std::filesystem::current_path() / "StateMachine.log";
+  std::filesystem::path InFileDir = std::filesystem::absolute("../../StateMachine/Examples/ExampleC/STM");
+  std::filesystem::path OutFileDir = std::filesystem::absolute("./CopiedFiles");
+  std::filesystem::path TraceLogFileName = std::filesystem::absolute("./StateMachineTrace.log");
+  std::filesystem::path LogFileName = std::filesystem::absolute("./StateMachine.log");
+  std::ofstream TraceFh;
+  std::ofstream LogFh;
+  bool TraceFriendly = false;
+  bool ForceOverwrite = false;
+
 
   if (std::filesystem::exists(OutFileDir) and not std::filesystem::is_directory(OutFileDir)) {
     std::cout << "CopiedFiles exists and is not a directory" << std::endl;
     exit(5);
   }
 
-  if (std::filesystem::exists(OutFileDir)) {
+    // If we are not going to do a overwrite then lets clear it out
+  if (!ForceOverwrite && std::filesystem::exists(OutFileDir)) {
+
+      // Make sure we do not have dirs in this directory, if fail
     for (const auto & entry : std::filesystem::directory_iterator(OutFileDir)) {
       if (std::filesystem::is_directory(entry)) {
         std::cout << "Cannot remove " << OutFileDir << " because it contains a directory " << entry.path() << std::endl;
         exit(6);
       }
     }
+
+      // No dirs, lets delete all the files
     for (const auto & entry : std::filesystem::directory_iterator(OutFileDir)) {
       std::filesystem::remove(entry.path());
     }
     std::filesystem::remove(OutFileDir);
   }
 
-  std::filesystem::create_directory(OutFileDir);
+  if (!std::filesystem::exists(OutFileDir)) std::filesystem::create_directory(OutFileDir);
 
-  std::ofstream LogFileFh(LogFileName);
+    // We should check for errors.
+  LogFh.open(LogFileName);
+  TraceFh.open(TraceLogFileName);
 
     // Create the state machine
-  CStateMachine StateMachine(InFileDir, OutFileDir, false, &LogFileFh, false);
+  CStateMachine StateMachine(InFileDir, OutFileDir, ForceOverwrite, &TraceFh,
+                             TraceFriendly, &LogFh);
 
   std::string SepLine;
   SepLine.insert(0, 50, '-');
-  std::cout << SepLine << std::endl;
-  std::cout << std::endl;
+  printf("%s\n", SepLine.c_str());
 
     // Run the state machine and capture how long it took
   auto t1 = std::chrono::high_resolution_clock::now();
@@ -78,10 +91,16 @@ int main(int argc, const char* argv[]) {
   auto t2 = std::chrono::high_resolution_clock::now();
   auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count();
 
-  std::cout << std::endl << "State machine ended with (" << rvalue << ")" << std::endl;
-  std::cout << "State machine states processed (" << StateMachine.StatesProcessed << ")" << std::endl;
-  std::cout << "State machine duration (" << duration << ")" << std::endl;
-  std::cout << SepLine << std::endl;
+    // Close the log files
+  TraceFh.close();
+  LogFh.close();
+
+  printf("State Machine RValue (%u)\n", StateMachine.ReturnValue.MachineRValue);
+  printf("State machine Msg (%s)\n", StateMachine.ReturnValue.Msg.c_str());
+  printf("State Machine User RValue (%u)\n", StateMachine.ReturnValue.UserRValue);
+  printf("State machine User Msg (%s)\n", StateMachine.ReturnValue.UserData.c_str());
+  printf("State machine duration (%I64d)\n", duration);
+  printf("%s\n", SepLine.c_str());
 
   return 0;
 }

@@ -69,7 +69,7 @@ typedef struct {
   enum MO MachineRValue;
   char *Msg;
   int UserRValue;
-  void *UserData;
+  char *UserData;
 } ReturnValueDef;
 
   /* This is how you run the statemachine.  When it returns you need to validate
@@ -84,11 +84,12 @@ typedef struct {
    *   _ForcOverwrite
    *     If true write over the _OutFileDir files without prompting.
    *   _TraceFh
-   *     If not equal to -1 then is assumed to be a file handle for
-   *     tracing.  If -1 no tracing will occur.
+   *     If not equal to NULL then trace the state machine.
    *   _TraceFriendly
    *     If true will outpu a friendly type trace, but takes up a lot of
    *     space.  For log files recommend this to be false.
+   *   _LogFh
+   *     If not equal to NULL then log what the user code is doing.
    */
 extern ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _ForceOverwrite,
                               FILE *_TraceFh, bool _TraceFriendly, FILE *_LogFh);

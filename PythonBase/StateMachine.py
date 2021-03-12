@@ -100,19 +100,19 @@ class CStateMachine(metaclass=ABCMeta):
   the tables and create your code blocks.  For details on how to implement this state machine
   see the documenation of the file.
 
-  CStateMachine(TraceFile = None, FriendlyTrace = False)
-    TraceFile
-      This is either None, no tracing or an instance of CTraceFile.  See Libs.Base.TraceFile
-      for details on how to use TraceFile.
+  CStateMachine(TraceFileFh = None, FriendlyTrace = False)
+    TraceFileFh
+      This is either None, no tracing or an instance of CTraceFile.  See Libs.Base.TraceFileFh
+      for details on how to use TraceFileFh.
     FriendlyTrace
       If True output a nicer trace for usable reading, but is very verbose.  Same data just
       displayed easer for a person to read.
   '''
 
-  def __init__(self, TraceFile = None, FriendlyTrace = False):
+  def __init__(self, TraceFileFh = None, FriendlyTrace = False):
     object.__init__(self)
 
-    self.TraceFile = TraceFile
+    self.TraceFileFh = TraceFileFh
     self.FriendlyTrace = FriendlyTrace
     self.StateRValue = -1
     self.StartState = -1
@@ -122,7 +122,6 @@ class CStateMachine(metaclass=ABCMeta):
     self.StateNames = ()
     self.Globals = globals()
     self.Locals = locals()
-    self.StatesProcessed = 0
     
     if not isinstance(FriendlyTrace, bool):
       raise AttributeError('FriendlyTrace must be a bool')
@@ -151,7 +150,6 @@ class CStateMachine(metaclass=ABCMeta):
     anything it wishes.  So the definition of the return is up to the user.
     '''
     _StateCmd = self.StartState
-    self.StatesProcessed = 0
     self.StateRValue = -1
     _PrevState = -2
     _xPrevState = -2
@@ -160,7 +158,6 @@ class CStateMachine(metaclass=ABCMeta):
     _CodeExecute = None
     
     while True:
-      self.StatesProcessed += 1
 
         # Validate that our table is ok.
       try:
@@ -174,7 +171,7 @@ class CStateMachine(metaclass=ABCMeta):
         # Execute the code block, and if state is 0 we end.
       exec(_CodeExecute, self.Globals, self.Locals)  # pylint: disable=exec-used
       if _StateCmd == self.EndState:
-        if self.TraceFile is not None:
+        if self.TraceFileFh is not None:
           StateTableEntry = self.StateTable[_StateCmd]
   
           PrevStateTableEntry = None
@@ -215,7 +212,7 @@ class CStateMachine(metaclass=ABCMeta):
                                 _PrevState,
                                 _PrevRStateValue)
 
-      if self.TraceFile is not None:
+      if self.TraceFileFh is not None:
         StateTableEntry = self.StateTable[_StateCmd]
 
         PrevStateTableEntry = None
@@ -316,4 +313,4 @@ class CStateMachine(metaclass=ABCMeta):
                                          datetime.now().strftime('%Y-%m-%d %H:%M:%S')) 
 
     Line += '\n'
-    self.TraceFile.write(Line)
+    self.TraceFileFh.write(Line)

@@ -54,16 +54,6 @@ static char *BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue);
   /* Used to get all the files in the InFileDir that we wish to process */
 static bool StoreFile(const char *_fileName);
 
-  /* Used to print an error, this is only for the CB_GetFiles code block.
-   * It is for the interactive stuff.
-   */
-static bool PrintError(char *ErrMsg);
-
-  /* Used to print a warning, this is only for the CB_GetFiles code block.
-   * It is for the interactive stuff.
-   */
-static bool PrintWarning(char *WarningMsg);
-
   /* Used to log what the user code is doing.  This has nothing to do with
    * tracing the state machine
    */
@@ -95,7 +85,6 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
   int OtherWise = -1;
   int StateRValue = -1;
   bool ProcessStates = true;
-  bool LoopError = true;
 
   ReturnValue->MachineRValue = MO_Ok;
   ReturnValue->Msg = NULL;
@@ -110,21 +99,14 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
        *   1 -> InFileDir does not exist
        *        OutFileDir does not exist
        *        InFileDir and OutFileDir are the same
+       *        OutFileDir is NULL
        */
       case CB_StartMachine:
         StateRValue = 0;
-        if (_InFileDir != NULL) {
-          InFileDir = RealPath(_InFileDir);
-        } else {
-          InFileDir = CurDir();
-        }
+        InFileDir = RealPath(_InFileDir);
         Log("Info", 2, "InFileDir set to ", InFileDir);
 
-        if (_OutFileDir != NULL) {
-          OutFileDir = RealPath(_OutFileDir);
-        } else {
-          OutFileDir = CurDir();
-        }
+        OutFileDir = RealPath(_OutFileDir);
         Log("Info", 2, "OutFileDir set to ", OutFileDir);
 
         if (!FileExist(InFileDir) || !IsDir(InFileDir)) {
@@ -196,15 +178,14 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
                   char *p = YesNo;
                   for (; *p; ++p) *p = tolower(*p);
                   if (strcmp(YesNo, "y") == 0) {
-                    Msg = StringBuild(NULL, 2, "Overwriting file (", OutFilePath->FullPath);
-                    PrintWarning(Msg);
+                    Log("Warning", 3, "Overwriting file (", OutFilePath->FullPath, ")");
+                    Msg = StringBuild(NULL, 3, "Warning: Overwriting file (", OutFilePath->FullPath, "\n");
+                    printf(Msg);
+                    free(Msg);
                     StateRValue = 3;
                   } else if (strcmp(YesNo, "n") == 0) {
                     Log("Error", 3, "User does not wont to overwrite file (", OutFilePath->FullPath,
                         ") ending program");
-                    Msg = StringBuild(NULL, 3, "User does not wont to overwrite file (", OutFilePath->FullPath,
-                                      ") ending program");
-                    PrintError(Msg);
                     ReturnValue->UserRValue = 1;
                     StateRValue = 4;
                     break;
@@ -233,12 +214,15 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
         {
           StateRValue = 0;
           InFileFh = NULL;
+          Log("Info", 2, "Opening file InFile ", InFilePath->FullPath);
           errno_t err = fopen_s(&InFileFh, InFilePath->FullPath, "r");
           if (err == 0) {
             OutFileFh = NULL;
+            Log("Info", 2, "Opening file OutFile ", OutFilePath->FullPath);
             err = fopen_s(&OutFileFh, OutFilePath->FullPath, "w");
             if (err != 0) {
               char ErrText[1024];
+
               strerror_s(ErrText, 1024, errno);
               Log("Error", 4, "Unable to open out file (", OutFilePath->FullPath,
                   ") => ", ErrText);
@@ -247,8 +231,8 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
             }
           } else {
             char ErrText[1024];
-            strerror_s(ErrText, 1024, errno);
 
+            strerror_s(ErrText, 1024, errno);
             Log("Error", 4, "Unable to open in file (", InFilePath->FullPath,
                 ") => ", ErrText);
             ReturnValue->UserRValue = 1;
@@ -264,10 +248,11 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
          */
       case CB_CopyFile:
         {
-          StateRValue = 0;
           char Line[1028];
           char *xLine;
           int LineCnt;
+
+          StateRValue = 0;
           Log("Info", 4, "Coping file (", InFilePath->FullPath, ") to (",
               OutFilePath->FullPath, ")");
           while (!feof(InFileFh)) {
@@ -328,11 +313,17 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
         StateRValue = 0;
         if (ReturnValue->UserData == NULL) {
           ReturnValue->UserRValue = 0;
-          ReturnValue->UserData = (void *) StringBuild(NULL, 1, "Ending State Machine");
+          ReturnValue->UserData = StringBuild(NULL, 1, "Ending State Machine");
         }
         Log("Info", 1, (char *) ReturnValue->UserData);
         ProcessStates = false;
-        LoopError = false;
+
+          // Free all the memory
+        if (InFileDir != NULL) free(InFileDir);
+        if (OutFileDir != NULL) free(OutFileDir);
+        SplitPathClean(InFilePath);
+        SplitPathClean(OutFilePath);
+        DropDList(DFileList, FileDListDeleter);
         break;
 
       default:
@@ -341,7 +332,6 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
                                     PrevCurStateIndx, StateRValue);
         Log("Error", 1, (char *) ReturnValue->Msg);
         ProcessStates = false;
-        LoopError = false;
         break;
     }
 
@@ -351,7 +341,6 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
                                   CurStateIndx, StateRValue);
       Log("Error", 1, (char *) ReturnValue->Msg);
       ProcessStates = false;
-      LoopError = false;
       break;
     }
 
@@ -364,7 +353,6 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
                                     CurStateIndx, StateRValue);
         Log("Error", 1, (char *) ReturnValue->Msg);
         ProcessStates = false;
-        LoopError = false;
         break;
       }
     }
@@ -414,23 +402,12 @@ ReturnValueDef *ST_Run(const char *_InFileDir, const char *_OutFileDir, bool _Fo
                                   PrevCurStateIndx, StateRValue);
       Log("Error", 1, (char *) ReturnValue->Msg);
       ProcessStates = false;
-      LoopError = false;
       break;
     }
   }
 
-    /* Make sure the files are closed. */
-  if (InFileFh != NULL) fclose(InFileFh);
-  if (OutFileFh != NULL) fclose(OutFileFh);
-
-    /* Free all the required memory. */
-  if (InFileDir != NULL) free(InFileDir);
-  if (OutFileDir != NULL) free(OutFileDir);
-  SplitPathClean(InFilePath);
-  SplitPathClean(OutFilePath);
-  DropDList(DFileList, FileDListDeleter);
-
-  if (LoopError) {
+    /* If the user did not set to exit the loop then error */
+  if (ProcessStates) {
     ReturnValue->MachineRValue = MO_ExitedMainLoop;
     ReturnValue->Msg = BuildMsg("Exited the main loop => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
                                 CurStateIndx, StateRValue);
@@ -448,22 +425,6 @@ ReturnValueDef *ST_CleanReturnValue(ReturnValueDef *_ReturnValue)
     free(_ReturnValue);
   }
   return NULL;
-}
-
-static bool PrintError(char *ErrMsg) {
-  char *Msg = StringBuild(NULL, 3, "ERROR: ", ErrMsg, "\n");
-  free(ErrMsg);
-  printf(Msg);
-  free(Msg);
-  return true;
-}
-
-static bool PrintWarning(char *WarningMsg) {
-  char *Msg = StringBuild(NULL, 3, "WARNING: ", WarningMsg, "\n");
-  free(WarningMsg);
-  printf(Msg);
-  free(Msg);
-  return true;
 }
 
 static char *BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue)

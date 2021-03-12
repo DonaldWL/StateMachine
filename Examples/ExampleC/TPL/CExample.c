@@ -37,7 +37,6 @@ Description:
 
 #include "StateMachine.h"
 #include "FileInfo.h"
-#include "Converters.h"
 #include "DList.h"
 
 static bool StoreFile(const char *_fileName)
@@ -58,7 +57,6 @@ int main()
   char *LogFileName = RealPath("./StateMachine.log"); /* Free Memory */
   FILE *TraceFh = NULL;
   FILE *LogFh = NULL;
-  CvtrValueDef *CvtrValues;                        /* Free memory */
   ReturnValueDef *ReturnValue;
   bool TraceFriendly = false;
   bool ForceOverwrite = false;
@@ -110,13 +108,30 @@ int main()
   errno_t err = fopen_s(&TraceFh, TraceLogFileName, "w");
   err = fopen_s(&LogFh, LogFileName, "w");
 
+  char SepLine[51];
+  memset(SepLine, '-', 50*sizeof(char));
+  SepLine[50] = '\0';
+  printf("%s\n", SepLine);
+
     /* Lets do the run and capture how long it took */
   clock_t begin = clock();
   ReturnValue = ST_Run(InFileDir, OutFileDir, ForceOverwrite, TraceFh, TraceFriendly, LogFh);
   clock_t end = clock();
-  CvtrValues = ConvertMilliseconds(end - begin, true);
-  printf("%uw %ud %uh %um %us %ums\n", CvtrValues->weeks, CvtrValues->days, CvtrValues->hours,
-         CvtrValues->minutes, CvtrValues->seconds, CvtrValues->milliseconds);
+
+  printf("State Machine RValue (%u)\n", ReturnValue->MachineRValue);
+  if (ReturnValue->Msg != NULL) {
+    printf("State machine Msg (%s)\n", ReturnValue->Msg);
+  } else {
+    printf("State machine Msg ()\n");
+  }
+  printf("State Machine User RValue (%u)\n", ReturnValue->UserRValue);
+  if (ReturnValue->UserData != NULL) {
+    printf("State machine User Msg (%s)\n", ReturnValue->UserData);
+  } else {
+    printf("State machine User Msg ()\n");
+  }
+  printf("State machine duration (%u)\n", end-begin);
+  printf("%s\n", SepLine);
 
     /* Close the log files */
   fclose(TraceFh);
@@ -127,7 +142,6 @@ int main()
   free(OutFileDir);
   free(TraceLogFileName);
   free(LogFileName);
-  free(CvtrValues);
   ST_CleanReturnValue(ReturnValue);
   return 0;
 }

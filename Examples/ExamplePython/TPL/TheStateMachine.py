@@ -34,6 +34,7 @@ Description:
 import os
 import sys
 from enum import IntEnum
+from datetime import datetime
 
 from PythonLib.Base.CreationInfo import CCreationInfo
 from StateMachine.PythonBase import (CodeBlockEntryDef as CBEntryDef, # pylint: disable=unused-import
@@ -44,8 +45,8 @@ from StateMachine.PythonBase import (CodeBlockEntryDef as CBEntryDef, # pylint: 
 class CTheStateMachine(CStateMachine):
 
   def __init__(self, InFileDir, OutFileDir, ForceOverwrite = False,  
-               TraceFile = None, FriendlyTrace = False):
-    CStateMachine.__init__(self, TraceFile, FriendlyTrace)
+               TraceFileFh = None, FriendlyTrace = False, LogFileFh = None):
+    CStateMachine.__init__(self, TraceFileFh, FriendlyTrace)
     
     self._InFileDir = InFileDir
     self._OutFileDir = OutFileDir
@@ -55,6 +56,7 @@ class CTheStateMachine(CStateMachine):
     self._OutFileName = None
     self._OutFileFh = None
     self._ForceOverwrite = ForceOverwrite
+    self._LogFileFh = LogFileFh
     self._Error = False
     
     self.StateRValue = -1
@@ -89,23 +91,22 @@ class CTheStateMachine(CStateMachine):
       1 -> InFileDir does not exist
            OutFileDir does not exist
            InFileDir and OutFileDir are the same
-           ForceOverwrite is not bool
     '''
     self.StateRValue = 0
     
+    self.Log("Info", "InFileDir set to ", self._InFileDir)
     self._InFileDir = os.path.abspath(os.path.expanduser(os.path.expandvars(self._InFileDir)))
+    self.Log("Info", "OutFileDir set to ", self._OutFileDir)
     self._OutFileDir = os.path.abspath(os.path.expanduser(os.path.expandvars(self._OutFileDir)))
     if not os.path.exists(self._InFileDir) or not os.path.isdir(self._InFileDir):
-      self.PrintError("InFileDir ({0}) must exist and be a directory".format(self._InFileDir))
+      self.Log("Error", "InFileDir (", self._InFileDir, ") is does not exist or is not a directory")
       self.StateRValue = 1
     elif self._InFileDir == self._OutFileDir:
-      self.PrintError("InFileDir and OutFileDir can not be the same")
+      self.Log("Error", "OutFileDir (", self._OutFileDir, ") is does not exist or is not a directory")
       self.StateRValue = 1
     elif not os.path.exists(self._OutFileDir) or not os.path.isdir(self._OutFileDir):
-      self.PrintError("OutFileDir ({0})  must exist and be a directory".format(self._OutFileDir))
-      self.StateRValue = 1
-    elif not isinstance(self._ForceOverwrite, bool):
-      self.PrintError("ForceOverwrite must be a bool")
+      self.Log("Error", "InFileDir (", self._InFileDir, ") is the same as OutFileDir (",
+               self._OutFileDir, ")")
       self.StateRValue = 1
     
   def GetFiles(self):
@@ -119,8 +120,10 @@ class CTheStateMachine(CStateMachine):
     self._Files = [os.path.join(self._InFileDir, f) 
                      for f in os.listdir(self._InFileDir) 
                        if os.path.isfile(os.path.join(self._InFileDir, f)) and f[0] != '.']
+    self.Log("Info", "Number of files to process (", len(self._Files), ") from InFileDir (",
+             self._InFileDir, ")")
     if not self._Files:
-      self.PrintError("InFileDir ({0}) does not contain any files that we can copy".format(self._InFileDir))
+      self.Log("Error", "No files found to process at InFileDir (", self._InFileDir, ")")
       self.StateRValue = 1
     
   def NextFile(self):
@@ -143,21 +146,24 @@ class CTheStateMachine(CStateMachine):
       self._OutFileName = os.path.join(self._OutFileDir, os.path.split(self._InFileName)[1])
       if os.path.exists(self._OutFileName):
         if not sys.stdin.isatty():
-          self.PrintError("Out File ({0}) exists and not in interactive mode".format(self._OutFileName))
+          self.Log("Error", "Out File (", self._OutFileName, ") exists and not in interactive mode")
           self.StateRValue = 2
         else:
           while True:
             YesNo = input('Out File ({0}) exists, overwrite (Y|N|S)? '.format(os.path.split(self._OutFileName)[1]))
             if YesNo.lower() == 'y':
-              self.PrintWarning("Overwriting file ({0})".format(self._OutFileName))
+              self.Log("Warning", "Overwriting file (", self._OutFileName, ")")
+              print("Warning: Overwriting file ({0})".format(self._OutFileName))
               self.StateRValue = 3
               break
             if YesNo.lower() == 'n':
-              self.PrintError("User does not wont to overwrite of ({0}) ending program".format(self._OutFileName))
+              self.Log("Error", "User does not wont to overwrite file (", self._OutFileName,
+                  ") ending program")
               self.StateRValue = 4
               break
             if YesNo.lower() == 's':
-              self.PrintWarning("Skipping file ({0})".format(self._OutFileName))
+              self.Log("Info", "User is skipping (", self._OutFileName, ")")
+              print("Warning: Skipping file ({0})".format(self._OutFileName))
               self.StateRValue = 5
               break
             
@@ -173,15 +179,17 @@ class CTheStateMachine(CStateMachine):
     self.StateRValue = 0
 
     try:
+      self.Log("Info", "Opening file InFile ", self._InFileName)
       self._InFileFh = open(self._InFileName, 'r')
 
       try:
+        self.Log("Info", "Opening file OutFile ", self._OutFileName)
         self._OutFileFh = open(self._OutFileName, 'w')
       except (OSError, IOError) as err:
-        self.PrintError("Unable to open out file ({0}) => {1}".format(self._OutFileName, str(err)))
+        self.Log("Error", "Unable to open out file (", self._OutFileName, ") => ", str(err))
         self.StateRValue = 2
     except (OSError, IOError) as err:
-      self.PrintError("Unable to open in file ({0}) => {1}".format(self._InFileName, str(err)))
+      self.Log("Error", "Unable to open in file (", self._InFileName, ") => ", str(err))
       self.StateRValue = 1
     
   def CopyFile(self):
@@ -194,15 +202,16 @@ class CTheStateMachine(CStateMachine):
     self.StateRValue = 0
 
     try:
+      self.Log("Info", "Coping file (", self._InFileName, ") to (", self._OutFileName, ")")
       for Line in self._InFileFh:
         try:
           self._OutFileFh.write(Line)
         except (OSError, IOError) as err:
-          self.PrintError("Unable to write out file ({0}) => {1}".format(self._OutFileName, str(err)))
+          self.Log("Error", "Unable to write out file (", self._OutFileName, ") => ", str(err))
           self.StateRValue = 2
           break
     except (OSError, IOError) as err:
-      self.PrintError("Unable to read in file ({0}) => {1}".format(self._OutFileName, str(err)))
+      self.Log("Error", "Unable to read in file (", self._InFileName, ") => ", str(err))
       self.StateRValue = 1
     
   def CloseFiles(self):
@@ -216,18 +225,20 @@ class CTheStateMachine(CStateMachine):
     
     if self._InFileFh is not None:
       try:
+        self.Log("Info", "Closing file InFile ", self._InFileName)
         self._InFileFh.close()
       except (OSError, IOError) as err:
         self.StateRValue = 1
-        self.PrintError("Unable to close in file ({0}) => {1}".format(self._OutFileName, str(err)))
+        self.Log("Error", "Unable to close in file (", self._InFileName, ") => ", str(err))
       self._InFileFh = None
       
     if self._OutFileFh is not None:
       try:
+        self.Log("Info", "Closing file OutFile ", self._InFileName)
         self._OutFileFh.close()
       except (OSError, IOError) as err:
         self.StateRValue = 2 if self.StateRValue == 0 else self.StateRValue
-        self.PrintError("Unable to close out file ({0}) => {1}".format(self._OutFileName, str(err)))
+        self.Log("Error", "Unable to close Out file (", self._OutFileName, ") => ", str(err))
       self._OutFileFh = None
     
   def EndMachine(self):
@@ -236,20 +247,17 @@ class CTheStateMachine(CStateMachine):
     '''
     self.CloseFiles()
     self.StateRValue = not self._Error
-    
-  def PrintError(self, ErrMsg):
-    '''
-    Print out the ErrMsg.
-    '''
-    self._Error = True
-    print('ERROR: ' + ErrMsg)
+    self.Log("Info", "Ending State Machine")
 
-  def PrintWarning(self, WarningMsg):
-    '''
-    Print out the WarningMsg.
-    '''
-    print('WARNING: ' + WarningMsg)
-    
+  def Log(self, MsgType, *argv):
+    if MsgType == "Error": 
+      self._Error = True
+    if self._LogFileFh is not None:
+      Msg = datetime.now().strftime('%Y-%m-%d %H:%M:%S: ') + MsgType + ": "
+      for arg in argv:
+        Msg += str(arg)
+      print(Msg, file=self._LogFileFh)  
+      
     # Overrides from base class, this is standard
   def GetCodeBlockName(self, CBIndex):
     return self.CB(self.CodeBlockTable[CBIndex].CBIndx).name
