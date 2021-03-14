@@ -15,3 +15,9 @@ TODO For StateMachine Package
       
     ExampleCPP
       Need to finish the Linux side.
+      
+TODO For Help
+  Would like some way of passing in a variable and text and have the 
+  help system do a replace if it finds the tag with the text in a file.
+  Could be used for the Languages.
+  

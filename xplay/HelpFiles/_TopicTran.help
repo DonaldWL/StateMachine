@@ -1,0 +1,17 @@
+t:Example
+t:ExampleC
+t:ExampleCPP
+t:ExamplePython
+t:C# -> t:ExampleCSharp
+t:Generator
+t:PythonBase
+t:SMS
+t:TODO
+-h => --help => h => t:help
+-e => --ecodes => t:ExitCodes
+t:SMSFile
+t:TPLDir
+t:STMDir
+t:GenProgram
+usage 
+usagedetails

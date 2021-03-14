@@ -1,0 +1,12 @@
+ <SMSFile> => is the SMS file to process
+ <TPLDir>  => is the directory that contains all your TPL files
+ <STMDir>  => is the location to place your results from the generator
+ Language  => is the language that you are processing (C, CPP, Python, CSharp)
+ Gen       => if passed in will generate your state machine to <STMDir>
+ OverWrite => if passed in will overwrite all the STM files
+ SMSReport => if passed in will generate the SMSReport
+ <help>    => {-h [<topic> <topic>...]|-help[<topic> <topic>...]|-e|-ecodes
+               -h|--help will output the help for the program.  Try -h help
+               -e|--ecodes will output the help and the exit codes for the program
+
+   Note: After <STMDir> the order does not matter

@@ -1,0 +1,101 @@
+You can find this example at 'StateMachine/Examples/ExampleCPP'.  The only 
+directory that contains files is TPL.  
+
+ExampleCPP shows you how to create TPL files for the CPP language.  Below is a
+list of the files and what they are for.
+
+  CPPExample.cpp
+    Main for the program
+  PosixIOFile.cpp
+  WinIOFile.cpp
+  IOFile.h
+    Setup of files to do IO and the like.
+  SMExceptions.cpp
+  SMExceptions.h
+    Exceptions that the state machine can throw.
+  StateMachine.cpp
+  StateMachine.h
+    The state machine.
+    
+In general the only files that are required for the state machine are the files
+files (StateMachine.c, StateMachine.h, SMExceptions.h, SMExceptions.c).  All the 
+other files are for the user code within the state machine.
+
+The StateMachine.h and StateMachine.c are the files that contain the state machine 
+code and the user code and the tables for the state machine.  It is a simple 
+CPP class.
+
+All the examples have the same basic code style when it comes to accessing the
+state table.  Python is a little different but C and CPP are exactly the same.
+
+All the code blocks are contained within a switch statement.  Each code block has 
+it's own 'case' entry.  Every time you create a new code block for your state machine
+you need to add a new 'case' entry.  
+
+A enum is created with the code block names.  The names are CB_<your code block name>.
+Each code block must set 'StateRValue' to an 'int' value.  This is then used in the
+state machine to determine what state to transition to.  Below is a simple example of
+a code block within the switch statement.  This is from the example
+
+        // StateRValue
+        //   0 -> Ok
+        //   1 -> InFileDir does not exist
+        //        OutFileDir does not exist
+        //        InFileDir and OutFileDir are the same
+      case CB_StartMachine:
+        StateRValue = 0;
+        GetFullPath(&InFileDir);
+        GetFullPath(&OutFileDir);
+        if (not std::filesystem::exists(InFileDir) or not std::filesystem::is_directory(InFileDir)) {
+          StateRValue = 1;
+        } else if (not std::filesystem::exists(OutFileDir) or not std::filesystem::is_directory(OutFileDir)) {
+          StateRValue = 1;
+        } else if (OutFileDir == InFileDir) {
+          StateRValue = 1;
+        }
+        break;
+
+This code block is used to setup the state machine for the users code.  Its
+name does not matter, we just picked this to make it easer to understand what
+its for.
+
+Looking at the code you will see that it has two possible values for 'StateRValue'.
+Your SMS file would define how it would transition using these values.  Below is
+the SMS file entry for a state that uses this code block.
+
+  @State StartState StartMachine
+    0 -> GetFiles
+    1 -> EndState
+
+If 'StateRValue' is 0 then the next state will be 'GetFiles', if it is 1 then the next
+state will be 'EndState'.
+
+As you can see its not very complicated. to add states and code blocks.  Remember, 
+a code block can be assigned to more than one state.  This is very common, the code
+may be the same but the state of the program is not, thus you are executing the same
+code but its results have a different meaning.
+
+A good example of this would be to modify the SMS file to have a state for closing
+the files on error and remove this from the end of the loop.  Thus, after the files
+have been open any error would go to that state and that state could close the files
+and then go to end stop instead of next file.
+
+Most the tables you find in the StateMachineTable.h are for tracing.  The only table
+that is used for the state machine is 'StateTable'.  This contains the code block to
+execute for the state and all of its transition states.  Below is an example of an
+entry.
+
+  CB_CloseFiles, ST_CloseFiles, 3, 25, 14, 14, -1,  // 0 (NextFile, EndState, EndState), -1
+  
+The first item is the code block to execute in the switch statement.  The next is an index
+into the 'StateNames' table, this is only for tracing.  The next '3', is how many transitions
+are defined for this state.  This example has 3.  the 25, 14, and 14 are the transition states.
+They are not really a state they are an index into 'StateTable' for that state.  If you have
+an OtherWise define for you state the '-1' would be an index to that state.
+
+Its not a very complicated table and is very fast.  So transitions are quick, most state machines
+require this.
+
+Some of the code in the state machine is keeping track of the previous state, this is not really
+required and can be removed, I have it so if I wish I can use it in trace.  I would recommend
+removing it for a real program.

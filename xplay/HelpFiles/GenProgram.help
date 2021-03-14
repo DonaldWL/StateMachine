@@ -1,0 +1,24 @@
+Gen is a simple program that will help you generate your state machine.  It
+takes in the TPL files that you have created and producing the STM files from
+them.  
+
+The reason the StateMachine is a package with the Gen program in it is you can
+use all the packages to write your own Gen program or if you are using Scons you
+can import these and make your own builders in Scons.
+
+The program is very simple.  The arguments are positional for the most part.
+If you look at the program it is just a driver for the Generator package and
+the SMS package.
+
+To get help on the syntax for the program:
+
+  Gen {{-h|-help}|{-e|-ecodes}}
+  
+    The -h or --help gives you help
+    The -e or -ecodes gives you help and a list of the exit codes.
+    
+ Review the program for details on how it works.  Its a good example on how
+ to drive the Generator package and the SMS package and how they work together.
+ 
+ This program is using the PythonLib.Help system.  So if you wish to use this
+ system, this is a nice example on how to do it.

@@ -1,0 +1,6 @@
+<STMDir>
+
+  Is the directory that the state machine will be placed in
+  by the generator package.  Your TPL and SMS file are used
+  to create this output.  See topics 'SMS' and 'Generator'.
+  
