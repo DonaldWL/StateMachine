@@ -43,7 +43,7 @@ class _CCPP(_CBase):
   def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult):  
     _CBase.__init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult)
     
-    if Language not in ('CPP', 'C'):
+    if Language not in ('CPP', 'C', 'CSharp'):
       raise AttributeError('_CCPP only supports generation of CPP or C code, language passed in ({0})'.format(Language))
     
       # Setup the calls for each command.
@@ -54,17 +54,23 @@ class _CCPP(_CBase):
     self._CmdExec['SMSUserDate'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.Date.Value)
     self._CmdExec['SMSUserVersion'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.Version.Value)
     self._CmdExec['SMSFileVersion'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.SMSFileVersion.Value)
-    self._CmdExec['CodeBlocks'] = self.CmdExecDef(self._CodeBlocks, None)
+    
+    if Language in ('CPP', 'C'):
+      self._CmdExec['CodeBlocks'] = self.CmdExecDef(self._CodeBlocks, None)
+      
     self._CmdExec['CodeBlockNames'] = self.CmdExecDef(self._CodeBlockNames, None)
     self._CmdExec['StateNames'] = self.CmdExecDef(self._StateNames, None)
     self._CmdExec['StateTable'] = self.CmdExecDef(self._StateTable, None)
+    
     self._CmdExec['StartState'] = self.CmdExecDef(self._StartState, None)
-    self._CmdExec['StartStateValue'] = self.CmdExecDef(self._StartStateValue, None)
     self._CmdExec['EndState'] = self.CmdExecDef(self._EndState, None)
+    self._CmdExec['StartStateValue'] = self.CmdExecDef(self._StartStateValue, None)
     self._CmdExec['EndStateValue'] = self.CmdExecDef(self._EndStateValue, None)
 
     if Language == 'CPP':
       self._CmdExec['ClassDefinition'] = self.CmdExecDef(self._ClassDefinition, None)
+
+    if Language in ('CPP', 'CSharp'):
       self._CmdExec['ClassName'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.StateMachineName.Value)
 
   #--------------------------------------------------------------------------
@@ -73,7 +79,10 @@ class _CCPP(_CBase):
     StartState tag
     '''
     StartStateId = self._SMSResult.StateNames.index(self._SMSResult.States.StartState.Param)
-    self._STMFileFh.write((' ' * self._ForcedOffset) + 'const int StartState = ' + str(StartStateId) + ';\n')
+    if self._FileLanguage == 'CSharp':
+      self._STMFileFh.write((' ' * self._ForcedOffset) + 'public static int StartStateIndx = ' + str(StartStateId) + ';\n')
+    else:
+      self._STMFileFh.write((' ' * self._ForcedOffset) + 'const int StartState = ' + str(StartStateId) + ';\n')
     
     #--------------------------------------------------------------------------
   def _EndState(self):
@@ -83,7 +92,10 @@ class _CCPP(_CBase):
     EndStateId = -1
     if self._SMSResult.States.EndState is not None:
       EndStateId = self._SMSResult.StateNames.index(self._SMSResult.States.EndState.Param)
-    self._STMFileFh.write((' ' * self._ForcedOffset) + 'const int EndState = ' + str(EndStateId) + ';\n')
+    if self._FileLanguage == 'CSharp':
+      self._STMFileFh.write((' ' * self._ForcedOffset) + 'public static int EndStateIndx = ' + str(EndStateId) + ';\n')
+    else:
+      self._STMFileFh.write((' ' * self._ForcedOffset) + 'const int EndState = ' + str(EndStateId) + ';\n')
 
     #--------------------------------------------------------------------------
   def _ClassDefinition(self):
@@ -100,6 +112,7 @@ class _CCPP(_CBase):
     '''
     StateTable tag.  Creates the state table and all its required variables.
     '''
+    # pylint: disable=too-many-branches
     StateInfoDef = namedtuple('StateInfo', ['Indx', 'OtherWise', 'CodeBlockName', 'TransStates'])
     StateInfo = {}        # Holds all the State infor, key is StatName, item is StateInfoDef
     STLen = 0             # Is the final length of the state table.  Also used to figure out the
@@ -155,16 +168,25 @@ class _CCPP(_CBase):
       # Create the table.
     if self._FileLanguage == 'CPP':
       Line = (' ' * self._ForcedOffset) + 'static const int STLen = ' + str(STLen) + ';\n'
-    else:
+    elif self._FileLanguage == 'C':
       Line = (' ' * self._ForcedOffset) + '#define STLen ' + str(STLen) + '\n'
+    else:
+      Line = (' ' * self._ForcedOffset) + 'public static int STLen = ' + str(STLen) + ';\n'
     self._STMFileFh.write(Line)
-    Line = ' ' * self._ForcedOffset + 'const int StateTable[STLen] = {'
+    if self._FileLanguage == 'CSharp':
+      Line = ' ' * self._ForcedOffset + 'public static int[] StateTable = {'
+    else:
+      Line = ' ' * self._ForcedOffset + 'const int StateTable[STLen] = {'
     tLine = ''
     LineIndent = ' ' * len(Line)
     StateName = ''
     for StateName in self._SMSResult.StateNames:
-      tLine = ('CB_' + StateInfo[StateName].CodeBlockName + ', ST_' + StateName + ', ' + 
-               str(len(StateInfo[StateName].TransStates)) + ', ')
+      if self._FileLanguage == 'CSharp':
+        tLine = ('(int)CB.' + StateInfo[StateName].CodeBlockName + ', (int)ST.' + StateName + ', ' + 
+                 str(len(StateInfo[StateName].TransStates)) + ', ')
+      else:
+        tLine = ('CB_' + StateInfo[StateName].CodeBlockName + ', ST_' + StateName + ', ' + 
+                 str(len(StateInfo[StateName].TransStates)) + ', ')
       for TStateName in StateInfo[StateName].TransStates:
         tLine += str(StateInfo[TStateName].Indx) + ', '
       if StateInfo[StateName].OtherWise: 
@@ -180,9 +202,14 @@ class _CCPP(_CBase):
       if StateInfo[StateName].OtherWise: 
         TOtherWise = StateInfo[StateName].OtherWise
       tLine += ' ' * abs((MaxTranLen - len(tLine)))
-      Line += tLine + '// {0} ({1}), {2}\n'.format(StateInfo[StateName].Indx,
-                                                   ", ".join(StateInfo[StateName].TransStates), 
-                                                   TOtherWise)
+      if self._FileLanguage == 'C':
+        Line += tLine + '/* {0} ({1}), {2} */\n'.format(StateInfo[StateName].Indx,
+                                                       ", ".join(StateInfo[StateName].TransStates), 
+                                                       TOtherWise)
+      else:
+        Line += tLine + '// {0} ({1}), {2}\n'.format(StateInfo[StateName].Indx,
+                                                     ", ".join(StateInfo[StateName].TransStates), 
+                                                     TOtherWise)
       self._STMFileFh.write(Line) 
       Line = LineIndent
 
@@ -192,15 +219,23 @@ class _CCPP(_CBase):
       TOtherWise = StateInfo[StateName].OtherWise
     Line += tLine + '};' 
     Line += ' ' * (abs(MaxTranLen - len(tLine)) - 2)
-    Line += '// {0} ({1}), {2}\n'.format(StateInfo[StateName].Indx,
-                                         ", ".join(StateInfo[StateName].TransStates), 
-                                         TOtherWise)
+    if self._FileLanguage == 'C':
+      Line += '/* {0} ({1}), {2} */\n'.format(StateInfo[StateName].Indx,
+                                           ", ".join(StateInfo[StateName].TransStates), 
+                                           TOtherWise)
+    else:
+      Line += '// {0} ({1}), {2}\n'.format(StateInfo[StateName].Indx,
+                                           ", ".join(StateInfo[StateName].TransStates), 
+                                           TOtherWise)
     self._STMFileFh.write(Line) 
 
       # Start and Stop Indx's
-    Line = (' ' * self._ForcedOffset) + 'const int StartStateIndx = ' + str(StartStateIndx) + ';\n'
-    self._STMFileFh.write(Line) 
-    Line = (' ' * self._ForcedOffset) + 'const int EndStateIndx = ' + str(EndStateIndx) + ';\n'
+    if self._FileLanguage == 'CSharp':
+      Line = (' ' * self._ForcedOffset) + 'public static int StartStateIndx = ' + str(StartStateIndx) + ';\n'
+      Line += (' ' * self._ForcedOffset) + 'public static int EndStateIndx = ' + str(EndStateIndx) + ';\n'
+    else:
+      Line = (' ' * self._ForcedOffset) + 'const int StartStateIndx = ' + str(StartStateIndx) + ';\n'
+      Line += (' ' * self._ForcedOffset) + 'const int EndStateIndx = ' + str(EndStateIndx) + ';\n'
     self._STMFileFh.write(Line) 
       
     #--------------------------------------------------------------------------
@@ -231,12 +266,17 @@ class _CCPP(_CBase):
       # Create the CBLen variables
     if self._FileLanguage == 'CPP':
       Line = (' ' * self._ForcedOffset) + 'static const int CBLen = ' + str(len(self._SMSResult.CodeBlockNames)) + ';\n'
-    else:
+    elif self._FileLanguage == 'C':
       Line = (' ' * self._ForcedOffset) + '#define CBLen ' + str(len(self._SMSResult.CodeBlockNames)) + '\n'
+    else:
+      Line = (' ' * self._ForcedOffset) + 'public static int CBLen = ' + str(len(self._SMSResult.CodeBlockNames)) + ';\n'
     self._STMFileFh.write(Line)
     
       # Create the CodeBlockNames variables
-    Line = ' ' * self._ForcedOffset + 'const char *CodeBlockNames[CBLen] = {'
+    if self._FileLanguage == 'CSharp':
+      Line = ' ' * self._ForcedOffset + 'public static string[] CodeBlockNames = {'
+    else:
+      Line = ' ' * self._ForcedOffset + 'const char *CodeBlockNames[CBLen] = {'
     LineIndent = ' ' * len(Line)
     for Indx in range(0, len(self._SMSResult.CodeBlockNames)):
       Line += '"' + self._SMSResult.CodeBlockNames[Indx]
@@ -248,14 +288,23 @@ class _CCPP(_CBase):
       Line = LineIndent
 
       # Create the enum. enum CB {
-    LineIndent = (' ' * self._ForcedOffset) + (' ' * self._ForcedOffset)
-    Line = '\n' + (' ' * self._ForcedOffset) + 'enum CB {\n'
+    LineIndent = (' ' * self._ForcedOffset) + '  '
+    if self._FileLanguage == 'CSharp':
+      Line = '\n' + (' ' * self._ForcedOffset) + 'public enum CB\n'
+      Line += (' ' * self._ForcedOffset) + '{\n'
+    else:
+      Line = '\n' + (' ' * self._ForcedOffset) + 'enum CB {\n'
     if self._ForcedOffset == 0:
       LineIndent = '  '
     for Indx in range(0, len(self._SMSResult.CodeBlockNames)):
-      Line += '{0}CB_{1} = {2},\n'.format(LineIndent, 
-                                          self._SMSResult.CodeBlockNames[Indx],
-                                          Indx)
+      if self._FileLanguage == 'CSharp':
+        Line += '{0}{1} = {2},\n'.format(LineIndent, 
+                                         self._SMSResult.CodeBlockNames[Indx],
+                                         Indx)
+      else:
+        Line += '{0}CB_{1} = {2},\n'.format(LineIndent, 
+                                            self._SMSResult.CodeBlockNames[Indx],
+                                            Indx)
     Line = Line[0:-2] + ('\n' + ' ' * self._ForcedOffset) + '};\n'
     self._STMFileFh.write(Line)
 
@@ -267,12 +316,17 @@ class _CCPP(_CBase):
       # Create the SNLen variables
     if self._FileLanguage == 'CPP':
       Line = (' ' * self._ForcedOffset) + 'static const int SNLen = ' + str(len(self._SMSResult.StateNames)) + ';\n'
-    else:
+    elif self._FileLanguage == 'C':
       Line = (' ' * self._ForcedOffset) + '#define SNLen ' + str(len(self._SMSResult.StateNames)) + '\n'
+    else: 
+      Line = (' ' * self._ForcedOffset) + 'public static int SNLen = ' + str(len(self._SMSResult.StateNames)) + ';\n'
     self._STMFileFh.write(Line)
     
       # Create the StateNames variables
-    Line = ' ' * self._ForcedOffset + 'const char *StateNames[SNLen] = {'
+    if self._FileLanguage == 'CSharp':
+      Line = ' ' * self._ForcedOffset + 'public static string[] StateNames = {'
+    else:
+      Line = ' ' * self._ForcedOffset + 'const char *StateNames[SNLen] = {'
     LineIndent = ' ' * len(Line)
     for Indx in range(0, len(self._SMSResult.StateNames)):
       Line += '"' + self._SMSResult.StateNames[Indx]
@@ -284,13 +338,22 @@ class _CCPP(_CBase):
       Line = LineIndent
  
       # Create the enum.
-    LineIndent = (' ' * self._ForcedOffset) + (' ' * self._ForcedOffset)
-    Line = '\n' + (' ' * self._ForcedOffset) + 'enum ST {\n'
+    LineIndent = (' ' * self._ForcedOffset) + '  '
+    if self._FileLanguage == 'CSharp':
+      Line = '\n' + (' ' * self._ForcedOffset) + 'public enum ST\n'
+      Line += (' ' * self._ForcedOffset) + '{\n'
+    else:
+      Line = '\n' + (' ' * self._ForcedOffset) + 'enum ST {\n'
     if self._ForcedOffset == 0:
       LineIndent = '  '
     for Indx in range(0, len(self._SMSResult.StateNames)):
-      Line += '{0}ST_{1} = {2},\n'.format(LineIndent, 
-                                          self._SMSResult.StateNames[Indx],
-                                          Indx)
+      if self._FileLanguage == 'CSharp':
+        Line += '{0}{1} = {2},\n'.format(LineIndent, 
+                                            self._SMSResult.StateNames[Indx],
+                                            Indx)
+      else:
+        Line += '{0}ST_{1} = {2},\n'.format(LineIndent, 
+                                            self._SMSResult.StateNames[Indx],
+                                            Indx)
     Line = Line[0:-2] + ('\n' +  ' ' * self._ForcedOffset) + '};\n'
     self._STMFileFh.write(Line)

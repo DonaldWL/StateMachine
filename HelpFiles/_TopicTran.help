@@ -2,6 +2,7 @@ t:Example
 t:ExampleC
 t:ExampleCPP
 t:ExamplePython
+t:C# -> t:ExampleCSharp
 t:Generator
 t:PythonBase
 t:SMS

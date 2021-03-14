@@ -163,4 +163,4 @@ SingleCmdDef = namedtuple('SingleCmd', ['LineNo', 'Value'])
 MultiParamCmdDef = namedtuple('MultiParamCmd', ['LineNo', 'Params'])
 
   # Languages supported
-LanguagesSupported = ('Python', 'CPP', 'C')
+LanguagesSupported = ('Python', 'CPP', 'C', 'CSharp')

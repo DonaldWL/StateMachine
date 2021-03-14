@@ -14,6 +14,8 @@ contain the language that the file is for or a special tag.
     File is for CPP
   @@Python@@
     File is for Python
+  @@CSharp@@
+    File is for CSharp (C#)
   @@CopyFile@@
     Only copy the file do not process for tags.  It only removes the
     first line.
@@ -62,7 +64,7 @@ A tag is of a very simple format:
           class @@ClassName@@ ...
             For all languages just does a simple replace.
                    
-      CodeBlocks
+      CodeBlocks (Python, C and CPP)
         Does a full replacement of the line and produces the code blocks for you.
         For C and CPP this would just be used to fill in the switch statement with
         the code block name as a case entry and then a break.  This is not normally

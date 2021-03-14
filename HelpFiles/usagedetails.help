@@ -1,7 +1,7 @@
  <SMSFile> => is the SMS file to process
  <TPLDir>  => is the directory that contains all your TPL files
  <STMDir>  => is the location to place your results from the generator
- Language  => is the language that you are processing
+ Language  => is the language that you are processing (C, CPP, Python, CSharp)
  Gen       => if passed in will generate your state machine to <STMDir>
  OverWrite => if passed in will overwrite all the STM files
  SMSReport => if passed in will generate the SMSReport

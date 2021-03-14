@@ -26,6 +26,15 @@ Description:
   TPL files and a location to place the results from the TPL files.  The
   result dir is called STM.
   
+  The files that process each language are:
+  
+    Languages.CPP
+      Processes C, CPP and CSharp (C#).  The reason for this is most
+      of the code is the same for all of them.  Just a few if statements
+      and it supports all three.
+    Languages.Python
+      Process Python
+  
   See the Gen.py program for an example on how to use this class.
 -----------------------------------------------------------------------------
 Update History:
@@ -126,7 +135,7 @@ class CGenerator(object):
     ClassToProcess = None
     if self._Language == 'Python':
       ClassToProcess = _CPython
-    elif self._Language in ('CPP', 'C'):
+    elif self._Language in ('CPP', 'C', 'CSharp'):
       ClassToProcess = _CCPP
 
     with CCodeTimer('TPL/STM', self._CaptureTimer):

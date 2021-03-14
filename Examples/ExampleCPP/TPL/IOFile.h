@@ -1,4 +1,4 @@
-//@@CopyFile@@
+//@@CPP@@
 #pragma once
 /*
 SMS User Author:  @@SMSUserAuthor@@

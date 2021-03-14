@@ -157,7 +157,7 @@ class _CBase(ABC):
       for Param in self._SMSResult.Language.Params:
         ParamList.append(Param.Param)
       if self._Cmd not in ParamList:
-        Msg = 'Error: Language {0} in TPL file {3} does not match the SMS file ({1}) Skipping file\n'
+        Msg = 'Error: Language {0} in TPL file {2} does not match the SMS file ({1}) Skipping file\n'
         self._LogFh.write(Msg.format(self._Cmd, ', '.join(ParamList), self._TPLFileName))
         return False
         

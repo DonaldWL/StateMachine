@@ -15,4 +15,14 @@ TODO For StateMachine Package
       
     ExampleCPP
       Need to finish the Linux side.
+      
+    ExampleCSharp
+      Most of the code is the same, the only difference is in
+      the syntax for the variable creation.  Look into making
+      a common set of code. 
+      
+TODO For Help
+  Would like some way of passing in a variable and text and have the 
+  help system do a replace if it finds the tag with the text in a file.
+  Could be used for the Languages.
   

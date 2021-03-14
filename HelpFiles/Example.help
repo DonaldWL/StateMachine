@@ -1,9 +1,22 @@
 The examples show how you can have one SMS files and create
-a state machine for C, CPP and Python.  The C and CPP example
-do not have any base files that are contained within the
-StateMachine package.  Python on the other hand has a base
-class that you can use to create your python state machine.
-See 'StateMachine.PythonBase' and its help file.
+a state machine for C, CPP, Python, and CSharp (C#).  The 
+C, CPP, and CSharp examples do not have any base files that 
+are contained within the StateMachine package.  Python on 
+the other hand has a base class that you can use to create 
+your python state machine.  See 'StateMachine.PythonBase' 
+and its help file.
+
+WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
+
+            These EXAMPLES are destructive.  
+            They delete and overwrite files.
+            Before you run them look at the
+            mains and make sure they point
+            to a STM directory that does not
+            exists, to stop them from deleting
+            or overwriting your files.  
+
+WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING 
 
 All the examples only contain TPL files, under each example
 you will find a directory called TPL.  That is the TPL
