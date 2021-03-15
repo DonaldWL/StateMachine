@@ -1,6 +1,9 @@
 The examples show how you can have one SMS files and create
-a state machine for C, CPP, Python, and CSharp (C#).  The 
-C, CPP, and CSharp examples do not have any base files that 
+a state machine for all the supported lanages:
+
+   @@@LANGUAGELIST@@@.  
+
+The C, CPP, and CSharp examples do not have any base files that 
 are contained within the StateMachine package.  Python on 
 the other hand has a base class that you can use to create 
 your python state machine.  See 'StateMachine.PythonBase' 

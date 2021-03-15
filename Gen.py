@@ -50,7 +50,7 @@ import sys
 import os
 from enum import (IntEnum, unique)
 
-from PythonLib.Help import CHelp
+from PythonLib.Help import (CHelp, TagInfoDef, TagTypes)
 from PythonLib.Base.Converters import ConvertMillisecondsDays  
 from StateMachine.SMS import (CSMSProcess, SMSReport, LanguagesSupported)
 from StateMachine.Generator import CGenerator
@@ -86,13 +86,17 @@ COPYRIGHT = '''
 '''
   
 def Help(Topics):
+  Tags = {'LANGUAGE': TagInfoDef(TagTypes.SINGLEWORD, ', '.join(LanguagesSupported)),
+          'LANGUAGELIST': TagInfoDef(TagTypes.PARAGRAPH, LanguagesSupported)}
+  
   HelpSys = CHelp(HelpDirs = [MYHELPFILEDIR, MYMODULEDIR],
                   TopicSeperatorLine = '\n',
                   PreTopic = 'usage',
                   PostTopic = None,
                   TopicIndent = 2,
                   CopyRight = COPYRIGHT,
-                  OutFile = None)
+                  OutFile = None,
+                  Tags = Tags)
   HelpSys.Process(Topics)
   
 if __name__ == '__main__':
