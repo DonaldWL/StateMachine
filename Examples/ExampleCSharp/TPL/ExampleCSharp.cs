@@ -92,7 +92,11 @@ namespace ExampleCSharp
       TraceFh = new StreamWriter(TraceFileName);
       LogFileFh = new StreamWriter(LogFileName);
 
-      // TODO: Create instance of state machine
+      string SepLine = "";
+      for (int i = 0; i < 50; i++) SepLine += "-";
+      Console.WriteLine("%s\n", SepLine);
+
+    	  // Create instance of state machine
       CStateMachine StateMachine = new CStateMachine(InFileDir, OutFileDir, ForceOverwrite,
                                                      TraceFh, TraceFriendly, LogFileFh);
       Stopwatch sw = new Stopwatch();
@@ -100,8 +104,12 @@ namespace ExampleCSharp
       int RValue = StateMachine.Run();
       sw.Stop();
 
-      // TODO: Output info
+      Console.WriteLine("State Machine RValue ({0})\n", StateMachine.ReturnValue.MachineRValue);
+      Console.WriteLine("State machine Msg ({0})\n", StateMachine.ReturnValue.Msg);
+      Console.WriteLine("State Machine User RValue ({0})\n", StateMachine.ReturnValue.UserRValue);
+      Console.WriteLine("State machine User Msg ({0})\n", StateMachine.ReturnValue.UserData);
       Console.WriteLine("State machine duration ({0}ms)", sw.ElapsedMilliseconds);
+      Console.WriteLine("%s\n", SepLine);
 
       TraceFh.Close();
       LogFileFh.Close();

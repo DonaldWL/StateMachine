@@ -1,5 +1,5 @@
 @SMSFileVersion 1.0
-@Language Python CPP C CSharp
+@Language Python CPP C CSharp Java
 @Author "Donald W. Long"
 @Date   01/22/2021
 @StateMachineName CTheStateMachine

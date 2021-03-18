@@ -135,7 +135,7 @@ class CGenerator(object):
     ClassToProcess = None
     if self._Language == 'Python':
       ClassToProcess = _CPython
-    elif self._Language in ('CPP', 'C', 'CSharp'):
+    else:   # 'CPP', 'C', 'CSharp', 'Java'
       ClassToProcess = _CCPP
 
     with CCodeTimer('TPL/STM', self._CaptureTimer):

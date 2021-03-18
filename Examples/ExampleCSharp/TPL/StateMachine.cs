@@ -310,6 +310,8 @@ namespace ExampleCSharp
             }
             break;
 
+            // End the state machine.  We setup to drop out of the main
+            // processing loop and return to the calling program.
           case (int) CSMT.CB.EndMachine:
             StateRValue = 0;
             ProcessStates = false;
@@ -404,7 +406,7 @@ namespace ExampleCSharp
                           "  StateRValue: " + StateRValue;
         Log("Error", ReturnValue.Msg);
       }
-      return 0;
+      return ReturnValue.UserRValue;
     }
 
     private string Log(string _MsgType, params object[] list)
@@ -412,13 +414,13 @@ namespace ExampleCSharp
       string Msg;
       string MsgBase = "";
 
+      MsgBase = _MsgType + ": ";
+      Msg = DateTime.Now.ToString("yyyy-MM-dd HH:MM:ss: ") + MsgBase;
+      for (int i = 0; i < list.Length; i++) {
+        Msg += list[i];
+        MsgBase += list[i];
+      }
       if (LogFh != null) {
-        MsgBase = _MsgType + ": ";
-        Msg = DateTime.Now.ToString("yyyy-MM-dd HH:MM:ss: ") + MsgBase;
-        for (int i = 0; i < list.Length; i++) {
-          Msg += list[i];
-          MsgBase += list[i];
-        }
         LogFh.WriteLine(Msg);
       }
       return MsgBase;

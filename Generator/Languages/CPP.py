@@ -43,7 +43,7 @@ class _CCPP(_CBase):
   def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult):  
     _CBase.__init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult)
     
-    if Language not in ('CPP', 'C', 'CSharp'):
+    if Language not in ('CPP', 'C', 'CSharp', 'Java'):
       raise AttributeError('_CCPP only supports generation of CPP or C code, language passed in ({0})'.format(Language))
     
       # Setup the calls for each command.
@@ -61,7 +61,6 @@ class _CCPP(_CBase):
     self._CmdExec['CodeBlockNames'] = self.CmdExecDef(self._CodeBlockNames, None)
     self._CmdExec['StateNames'] = self.CmdExecDef(self._StateNames, None)
     self._CmdExec['StateTable'] = self.CmdExecDef(self._StateTable, None)
-    
     self._CmdExec['StartState'] = self.CmdExecDef(self._StartState, None)
     self._CmdExec['EndState'] = self.CmdExecDef(self._EndState, None)
     self._CmdExec['StartStateValue'] = self.CmdExecDef(self._StartStateValue, None)
@@ -81,6 +80,8 @@ class _CCPP(_CBase):
     StartStateId = self._SMSResult.StateNames.index(self._SMSResult.States.StartState.Param)
     if self._FileLanguage == 'CSharp':
       self._STMFileFh.write((' ' * self._ForcedOffset) + 'public static int StartStateIndx = ' + str(StartStateId) + ';\n')
+    elif self._FileLanguage == 'Java':
+      self._STMFileFh.write((' ' * self._ForcedOffset) + 'public static final int StartStateIndx = ' + str(StartStateId) + ';\n')
     else:
       self._STMFileFh.write((' ' * self._ForcedOffset) + 'const int StartState = ' + str(StartStateId) + ';\n')
     
@@ -92,8 +93,12 @@ class _CCPP(_CBase):
     EndStateId = -1
     if self._SMSResult.States.EndState is not None:
       EndStateId = self._SMSResult.StateNames.index(self._SMSResult.States.EndState.Param)
+
+    
     if self._FileLanguage == 'CSharp':
       self._STMFileFh.write((' ' * self._ForcedOffset) + 'public static int EndStateIndx = ' + str(EndStateId) + ';\n')
+    elif self._FileLanguage == 'Java':
+      self._STMFileFh.write((' ' * self._ForcedOffset) + 'public static final int EndStateIndx = ' + str(EndStateId) + ';\n')
     else:
       self._STMFileFh.write((' ' * self._ForcedOffset) + 'const int EndState = ' + str(EndStateId) + ';\n')
 
@@ -170,11 +175,15 @@ class _CCPP(_CBase):
       Line = (' ' * self._ForcedOffset) + 'static const int STLen = ' + str(STLen) + ';\n'
     elif self._FileLanguage == 'C':
       Line = (' ' * self._ForcedOffset) + '#define STLen ' + str(STLen) + '\n'
+    elif self._FileLanguage == 'Java':
+      Line = (' ' * self._ForcedOffset) + 'public static final int STLen = ' + str(STLen) + ';\n'
     else:
       Line = (' ' * self._ForcedOffset) + 'public static int STLen = ' + str(STLen) + ';\n'
     self._STMFileFh.write(Line)
     if self._FileLanguage == 'CSharp':
       Line = ' ' * self._ForcedOffset + 'public static int[] StateTable = {'
+    elif self._FileLanguage == 'Java':
+      Line = ' ' * self._ForcedOffset + 'public static final int[] StateTable = {'
     else:
       Line = ' ' * self._ForcedOffset + 'const int StateTable[STLen] = {'
     tLine = ''
@@ -233,6 +242,9 @@ class _CCPP(_CBase):
     if self._FileLanguage == 'CSharp':
       Line = (' ' * self._ForcedOffset) + 'public static int StartStateIndx = ' + str(StartStateIndx) + ';\n'
       Line += (' ' * self._ForcedOffset) + 'public static int EndStateIndx = ' + str(EndStateIndx) + ';\n'
+    elif self._FileLanguage == 'Java':
+      Line = (' ' * self._ForcedOffset) + 'public static final int StartStateIndx = ' + str(StartStateIndx) + ';\n'
+      Line += (' ' * self._ForcedOffset) + 'public static final int EndStateIndx = ' + str(EndStateIndx) + ';\n'
     else:
       Line = (' ' * self._ForcedOffset) + 'const int StartStateIndx = ' + str(StartStateIndx) + ';\n'
       Line += (' ' * self._ForcedOffset) + 'const int EndStateIndx = ' + str(EndStateIndx) + ';\n'
@@ -268,6 +280,8 @@ class _CCPP(_CBase):
       Line = (' ' * self._ForcedOffset) + 'static const int CBLen = ' + str(len(self._SMSResult.CodeBlockNames)) + ';\n'
     elif self._FileLanguage == 'C':
       Line = (' ' * self._ForcedOffset) + '#define CBLen ' + str(len(self._SMSResult.CodeBlockNames)) + '\n'
+    elif self._FileLanguage == 'Java':
+      Line = (' ' * self._ForcedOffset) + 'public static final int CBLen = ' + str(len(self._SMSResult.CodeBlockNames)) + ';\n'
     else:
       Line = (' ' * self._ForcedOffset) + 'public static int CBLen = ' + str(len(self._SMSResult.CodeBlockNames)) + ';\n'
     self._STMFileFh.write(Line)
@@ -275,6 +289,8 @@ class _CCPP(_CBase):
       # Create the CodeBlockNames variables
     if self._FileLanguage == 'CSharp':
       Line = ' ' * self._ForcedOffset + 'public static string[] CodeBlockNames = {'
+    elif self._FileLanguage == 'Java':
+      Line = ' ' * self._ForcedOffset + 'public static final String[] CodeBlockNames = {'
     else:
       Line = ' ' * self._ForcedOffset + 'const char *CodeBlockNames[CBLen] = {'
     LineIndent = ' ' * len(Line)
@@ -289,15 +305,21 @@ class _CCPP(_CBase):
 
       # Create the enum. enum CB {
     LineIndent = (' ' * self._ForcedOffset) + '  '
-    if self._FileLanguage == 'CSharp':
-      Line = '\n' + (' ' * self._ForcedOffset) + 'public enum CB\n'
-      Line += (' ' * self._ForcedOffset) + '{\n'
-    else:
-      Line = '\n' + (' ' * self._ForcedOffset) + 'enum CB {\n'
+    Line = ''
+    if self._FileLanguage != 'Java':
+      if self._FileLanguage == 'CSharp':
+        Line = '\n' + (' ' * self._ForcedOffset) + 'public enum CB\n'
+        Line += (' ' * self._ForcedOffset) + '{\n'
+      else:
+        Line = '\n' + (' ' * self._ForcedOffset) + 'enum CB {\n'
     if self._ForcedOffset == 0:
       LineIndent = '  '
     for Indx in range(0, len(self._SMSResult.CodeBlockNames)):
-      if self._FileLanguage == 'CSharp':
+      if self._FileLanguage == 'Java':
+        Line += '{0}public static final int CB_{1} = {2};\n'.format((' ' * self._ForcedOffset), 
+                                                                    self._SMSResult.CodeBlockNames[Indx],
+                                                                    Indx)
+      elif self._FileLanguage == 'CSharp':
         Line += '{0}{1} = {2},\n'.format(LineIndent, 
                                          self._SMSResult.CodeBlockNames[Indx],
                                          Indx)
@@ -305,7 +327,8 @@ class _CCPP(_CBase):
         Line += '{0}CB_{1} = {2},\n'.format(LineIndent, 
                                             self._SMSResult.CodeBlockNames[Indx],
                                             Indx)
-    Line = Line[0:-2] + ('\n' + ' ' * self._ForcedOffset) + '};\n'
+    if self._FileLanguage != 'Java':
+      Line = Line[0:-2] + ('\n' + ' ' * self._ForcedOffset) + '};\n'
     self._STMFileFh.write(Line)
 
     #--------------------------------------------------------------------------
@@ -318,6 +341,8 @@ class _CCPP(_CBase):
       Line = (' ' * self._ForcedOffset) + 'static const int SNLen = ' + str(len(self._SMSResult.StateNames)) + ';\n'
     elif self._FileLanguage == 'C':
       Line = (' ' * self._ForcedOffset) + '#define SNLen ' + str(len(self._SMSResult.StateNames)) + '\n'
+    elif self._FileLanguage == 'Java':
+      Line = (' ' * self._ForcedOffset) + 'public static final int SNLen = ' + str(len(self._SMSResult.StateNames)) + ';\n'
     else: 
       Line = (' ' * self._ForcedOffset) + 'public static int SNLen = ' + str(len(self._SMSResult.StateNames)) + ';\n'
     self._STMFileFh.write(Line)
@@ -325,6 +350,8 @@ class _CCPP(_CBase):
       # Create the StateNames variables
     if self._FileLanguage == 'CSharp':
       Line = ' ' * self._ForcedOffset + 'public static string[] StateNames = {'
+    if self._FileLanguage == 'Java':
+      Line = ' ' * self._ForcedOffset + 'public static final String[] StateNames = {'
     else:
       Line = ' ' * self._ForcedOffset + 'const char *StateNames[SNLen] = {'
     LineIndent = ' ' * len(Line)
@@ -339,15 +366,21 @@ class _CCPP(_CBase):
  
       # Create the enum.
     LineIndent = (' ' * self._ForcedOffset) + '  '
-    if self._FileLanguage == 'CSharp':
-      Line = '\n' + (' ' * self._ForcedOffset) + 'public enum ST\n'
-      Line += (' ' * self._ForcedOffset) + '{\n'
-    else:
-      Line = '\n' + (' ' * self._ForcedOffset) + 'enum ST {\n'
+    Line = ''
+    if self._FileLanguage != 'Java':
+      if self._FileLanguage == 'CSharp':
+        Line = '\n' + (' ' * self._ForcedOffset) + 'public enum ST\n'
+        Line += (' ' * self._ForcedOffset) + '{\n'
+      else:
+        Line = '\n' + (' ' * self._ForcedOffset) + 'enum ST {\n'
     if self._ForcedOffset == 0:
       LineIndent = '  '
     for Indx in range(0, len(self._SMSResult.StateNames)):
-      if self._FileLanguage == 'CSharp':
+      if self._FileLanguage == 'Java':
+        Line += '{0}public static final int ST_{1} = {2};\n'.format((' ' * self._ForcedOffset), 
+                                                                    self._SMSResult.StateNames[Indx],
+                                                                    Indx)
+      elif self._FileLanguage == 'CSharp':
         Line += '{0}{1} = {2},\n'.format(LineIndent, 
                                             self._SMSResult.StateNames[Indx],
                                             Indx)
@@ -355,5 +388,6 @@ class _CCPP(_CBase):
         Line += '{0}ST_{1} = {2},\n'.format(LineIndent, 
                                             self._SMSResult.StateNames[Indx],
                                             Indx)
-    Line = Line[0:-2] + ('\n' +  ' ' * self._ForcedOffset) + '};\n'
+    if self._FileLanguage != 'Java':
+      Line = Line[0:-2] + ('\n' +  ' ' * self._ForcedOffset) + '};\n'
     self._STMFileFh.write(Line)
