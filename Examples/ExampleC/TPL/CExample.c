@@ -51,7 +51,7 @@ static void FileDListDeleter(void *_userData) {
 
 int main()
 {
-  char *InFileDir = RealPath("../../StateMachine/Examples/ExampleC/STM"); /* Free memory  */
+  char *InFileDir = RealPath("./Src"); /* Free memory  */
   char *OutFileDir = RealPath("./CopiedFiles"); /* Free memory */
   char *TraceLogFileName = RealPath("./StateMachineTrace.log"); /* Free Memory */
   char *LogFileName = RealPath("./StateMachine.log"); /* Free Memory */

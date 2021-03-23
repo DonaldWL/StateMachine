@@ -40,13 +40,13 @@ namespace ExampleCSharp
   {
     static int Main(string[] args)
     {
-      string InFileDir = Path.GetFullPath("../../../");
-      string OutFileDir = Path.GetFullPath("../../../../CopyFiles");
+      string InFileDir = Path.GetFullPath("./Src");
+      string OutFileDir = Path.GetFullPath("./CopyFiles");
       bool ForceOverwrite = false;
-      string TraceFileName = Path.GetFullPath("../../../../StateMachineTrace.log");
+      string TraceFileName = Path.GetFullPath("./StateMachineTrace.log");
       StreamWriter TraceFh = null;
       bool TraceFriendly = false;
-      string LogFileName = Path.GetFullPath("../../../../StateMachine.log");
+      string LogFileName = Path.GetFullPath("./StateMachine.log");
       StreamWriter LogFileFh = null;
 
 
@@ -59,7 +59,7 @@ namespace ExampleCSharp
         string[] files = Directory.GetFiles(OutFileDir, "*");
         for (int i = 0; i < files.Length; i++) {
           if (Directory.Exists(files[i])) {
-            Console.WriteLine("Cannot remove %s because it contains a directory %s\n", OutFileDir, files[i]);
+            Console.WriteLine("Cannot remove {0} because it contains a directory {1}", OutFileDir, files[i]);
             return(6);
           }
         }
@@ -68,7 +68,7 @@ namespace ExampleCSharp
             try {
               File.Delete(files[i]);
             } catch (IOException err) {
-              Console.WriteLine("Cannot remove %s because %s\n", files[i], err.Message);
+              Console.WriteLine("Cannot remove {0} because {1}", files[i], err.Message);
               return(7);
             }
           }
@@ -76,7 +76,7 @@ namespace ExampleCSharp
         try {
           Directory.Delete(OutFileDir);
         } catch (IOException err) {
-          Console.WriteLine("Cannot remove %s because %s\n", OutFileDir, err.Message);
+          Console.WriteLine("Cannot remove {0} because {1}", OutFileDir, err.Message);
           return (7);
         }
       }
@@ -84,7 +84,7 @@ namespace ExampleCSharp
         try {
           Directory.CreateDirectory(OutFileDir);
         } catch (IOException err) {
-          Console.WriteLine("Cannot create %s because %s\n", OutFileDir, err.Message);
+          Console.WriteLine("Cannot create {0} because {1}", OutFileDir, err.Message);
           return (7);
         }
       }
@@ -94,7 +94,7 @@ namespace ExampleCSharp
 
       string SepLine = "";
       for (int i = 0; i < 50; i++) SepLine += "-";
-      Console.WriteLine("%s\n", SepLine);
+      Console.WriteLine("{0}", SepLine);
 
     	  // Create instance of state machine
       CStateMachine StateMachine = new CStateMachine(InFileDir, OutFileDir, ForceOverwrite,
@@ -104,12 +104,12 @@ namespace ExampleCSharp
       int RValue = StateMachine.Run();
       sw.Stop();
 
-      Console.WriteLine("State Machine RValue ({0})\n", StateMachine.ReturnValue.MachineRValue);
-      Console.WriteLine("State machine Msg ({0})\n", StateMachine.ReturnValue.Msg);
-      Console.WriteLine("State Machine User RValue ({0})\n", StateMachine.ReturnValue.UserRValue);
-      Console.WriteLine("State machine User Msg ({0})\n", StateMachine.ReturnValue.UserData);
+      Console.WriteLine("State Machine RValue ({0})", StateMachine.ReturnValue.MachineRValue);
+      Console.WriteLine("State machine Msg ({0})", StateMachine.ReturnValue.Msg);
+      Console.WriteLine("State Machine User RValue ({0})", StateMachine.ReturnValue.UserRValue);
+      Console.WriteLine("State machine User Msg ({0})", StateMachine.ReturnValue.UserData);
       Console.WriteLine("State machine duration ({0}ms)", sw.ElapsedMilliseconds);
-      Console.WriteLine("%s\n", SepLine);
+      Console.WriteLine("{0}", SepLine);
 
       TraceFh.Close();
       LogFileFh.Close();

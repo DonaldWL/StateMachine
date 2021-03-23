@@ -31,6 +31,7 @@ Description:
 -----------------------------------------------------------------------------
 */
 #include <stdarg.h>
+#include <filesystem>
 
 #include "IOFile.h"
 #include "StateMachine.h"
@@ -54,19 +55,19 @@ int CStateMachine::Run(void)
         //        InFileDir and OutFileDir are the same
       case CB_StartMachine:
         StateRValue = 0;
-        GetFullPath(&InFileDir);
-        Log("Info", 2, "InFileDir set to ", InFileDir);
-        GetFullPath(&OutFileDir);
-        Log("Info", 2, "OutFileDir set to ", OutFileDir);
-        if (not std::filesystem::exists(InFileDir) or not std::filesystem::is_directory(InFileDir)) {
-          Log("Error", 3, "InFileDir (", InFileDir, ") is does not exist or is not a directory");
+        InFileDir = std::filesystem::absolute(InFileDir);
+        Log("Info", 2, "InFileDir set to ", InFileDir.string().c_str());
+        OutFileDir = std::filesystem::absolute(OutFileDir);
+        Log("Info", 2, "OutFileDir set to ", OutFileDir.string().c_str());
+        if (!std::filesystem::exists(InFileDir) || !std::filesystem::is_directory(InFileDir)) {
+          Log("Error", 3, "InFileDir (", InFileDir.string().c_str(), ") is does not exist or is not a directory");
           StateRValue = 1;
-        } else if (not std::filesystem::exists(OutFileDir) or not std::filesystem::is_directory(OutFileDir)) {
-          Log("Error", 3, "OutFileDir (", OutFileDir, ") is does not exist or is not a directory");
+        } else if (!std::filesystem::exists(OutFileDir) || !std::filesystem::is_directory(OutFileDir)) {
+          Log("Error", 3, "OutFileDir (", OutFileDir.string().c_str(), ") is does not exist or is not a directory");
           StateRValue = 1;
         } else if (OutFileDir == InFileDir) {
-          Log("Error", 5, "InFileDir (", InFileDir, ") is the same as OutFileDir (",
-              OutFileDir, ")");
+          Log("Error", 5, "InFileDir (", InFileDir.string().c_str(), ") is the same as OutFileDir (",
+              OutFileDir.string().c_str(), ")");
           StateRValue = 1;
         }
         break;
@@ -77,7 +78,7 @@ int CStateMachine::Run(void)
       case CB_GetFiles:
         StateRValue = 0;
         for (const auto &entry : std::filesystem::directory_iterator(InFileDir)) {
-          if (not std::filesystem::is_directory(entry.path()) &&
+          if (!std::filesystem::is_directory(entry.path()) &&
               std::string{ entry.path().filename().u8string() }[0] != '.') {
             Files.push_front(entry.path());
           }
@@ -87,11 +88,11 @@ int CStateMachine::Run(void)
 
           _itoa_s((int)Files.size(), ANum, 20, 10);
           Log("Info", 5, "Number of files to process (", ANum, ") from InFileDir (",
-              InFileDir, ")");
+              InFileDir.string().c_str(), ")");
         }
 
         if (Files.empty()) {
-          Log("Error", 3, "No files found to process at InFileDir (", InFileDir, ")");
+          Log("Error", 3, "No files found to process at InFileDir (", InFileDir.string().c_str(), ")");
           StateRValue = 1;
         }
         break;
@@ -114,31 +115,29 @@ int CStateMachine::Run(void)
           if (std::filesystem::exists(OutFileName)) {
             std::string Msg;
             if (!IsAtty(stdin)) {
-              Log("Error", 3, "Out File (", OutFileName, ") exists and not in interactive mode");
+              Log("Error", 3, "Out File (", OutFileName.string().c_str(), ") exists and not in interactive mode");
               ReturnValue.UserRValue = 1;
               StateRValue = 2;
             } else {
               std::string YesNo;
               while (true) {
-                std::cout << "Out File (" << OutFileName.string() << ") exists, overwrite (Y|N|S)? ";
+                std::cout << "Out File (" << OutFileName.string().c_str() << ") exists, overwrite (Y|N|S)? ";
                 std::cin >> YesNo;
                 transform(YesNo.begin(), YesNo.end(), YesNo.begin(), ::tolower);
                 if (YesNo == "y") {
-                  Log("Warning", 3, "Overwriting file (", OutFileName.string(), ")");
-                  Msg = "Warning: Overwriting file (" + OutFileName.string() + "\n";
+                  Msg = Log("Warning", 3, "Overwriting file (", OutFileName.string().c_str(), ")");
                   printf(Msg.c_str());
                   StateRValue = 3;
                   break;
                 } else if (YesNo == "n") {
-                  Log("Error", 3, "User does not wont to overwrite file (", OutFileName,
-                      ") ending program");
-                  Msg = "Warning: User does not wont to overwrite of (" + OutFileName.string() + ") ending program\n";
+                  Msg = Log("Error", 3, "User does not wont to overwrite file (", OutFileName.string().c_str(),
+                           ") ending program");
                   printf(Msg.c_str());
                   ReturnValue.UserRValue = 1;
                   StateRValue = 4;
                   break;
                 } else if (YesNo == "s") {
-                  Log("Info", 3, "User is skipping (", OutFileName, ")");
+                  Log("Info", 3, "User is skipping (", OutFileName.string().c_str(), ")");
                   StateRValue = 5;
                   break;
                 }
@@ -156,21 +155,21 @@ int CStateMachine::Run(void)
         //   2 -> Unable to open out file
       case CB_OpenFiles:
         StateRValue = 0;
-        Log("Info", 2, "Opening file InFile ", InFileName);
+        Log("Info", 2, "Opening file InFile ", InFileName.string().c_str());
         InFileFh = std::ifstream(InFileName);
         if (!InFileFh.good()) {
           std::error_code err(errno, std::system_category());
-          Log("Error", 4, "Unable to open in file (", InFileName,
+          Log("Error", 4, "Unable to open in file (", InFileName.string().c_str(),
               ") => ", err.message());
           ReturnValue.UserRValue = 1;
           StateRValue = 1;
         }
 
-        Log("Info", 2, "Opening file OutFile ", OutFileName);
+        Log("Info", 2, "Opening file OutFile ", OutFileName.string().c_str());
         OutFileFh = std::ofstream(OutFileName);
         if (!OutFileFh.good()) {
           std::error_code err(errno, std::system_category());
-          Log("Error", 4, "Unable to open out file (", OutFileName,
+          Log("Error", 4, "Unable to open out file (", OutFileName.string().c_str(),
               ") => ", err.message());
           ReturnValue.UserRValue = 1;
           StateRValue = 2;
@@ -183,8 +182,8 @@ int CStateMachine::Run(void)
         //   2 -> Write error on OutFile
       case CB_CopyFile:
         StateRValue = 0;
-        Log("Info", 4, "Coping file (", InFileName, ") to (",
-            OutFileName, ")");
+        Log("Info", 4, "Coping file (", InFileName.string().c_str(), ") to (",
+            OutFileName.string().c_str(), ")");
         {
           std::string Line;
 
@@ -193,7 +192,7 @@ int CStateMachine::Run(void)
             if (!InFileFh.good()) {
               std::error_code err(errno, std::system_category());
               if (err.value() != 0) {
-                Log("Error", 4, "Unable to read in file (", InFileName,
+                Log("Error", 4, "Unable to read in file (", InFileName.string().c_str(),
                     ") => ", err.message());
                 ReturnValue.UserRValue = 1;
                 StateRValue = 1;
@@ -205,7 +204,7 @@ int CStateMachine::Run(void)
             OutFileFh << Line << std::endl;
             if (!OutFileFh.good()) {
               std::error_code err(errno, std::system_category());
-              Log("Error", 4, "Unable to write out file (", OutFileName,
+              Log("Error", 4, "Unable to write out file (", OutFileName.string().c_str(),
                   ") => ", err.message());
               ReturnValue.UserRValue = 1;
               StateRValue = 1;
@@ -221,11 +220,11 @@ int CStateMachine::Run(void)
         //   2->Unable to close out file
       case CB_CloseFiles:
         if (InFileFh.is_open()) {
-          Log("Info", 2, "Closing file InFile ", InFileName);
+          Log("Info", 2, "Closing file InFile ", InFileName.string().c_str());
           InFileFh.close();
         }
         if (OutFileFh.is_open()) {
-          Log("Info", 2, "Closing file OutFile ", OutFileName);
+          Log("Info", 2, "Closing file OutFile ", OutFileName.string().c_str());
           OutFileFh.close();
         }
         break;
@@ -304,9 +303,10 @@ int CStateMachine::Run(void)
   return ReturnValue.UserRValue;
 }
 
-void CStateMachine::Log(const char *_MsgType, int _ArgCnt, ...)
+std::string CStateMachine::Log(const char *_MsgType, int _ArgCnt, ...)
 {
   std::string Msg;
+  std::string MsgBase;
   struct tm newtime;
   char tDateTime[30];
 
@@ -321,12 +321,18 @@ void CStateMachine::Log(const char *_MsgType, int _ArgCnt, ...)
 
     Msg = tDateTime;
     Msg += _MsgType;
+    MsgBase = _MsgType;
     Msg += ": ";
+    MsgBase += ": ";
 
     for (int i = 0; i < _ArgCnt; i++) {
-      Msg += va_arg(args, char *);
+      char *arg = va_arg(args, char *);
+      Msg += arg;
+      MsgBase += arg;
     }
     *LogFileFh << Msg << std::endl;
+    MsgBase += '\n';
     va_end(args);
   }
+  return MsgBase;
 }

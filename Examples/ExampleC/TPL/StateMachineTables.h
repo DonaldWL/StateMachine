@@ -36,16 +36,20 @@ Description:
 extern "C" {
 #endif
 
-//*@@CodeBlockNames:0@@*/
+/*@@CodeBlockNames:0@@*/
 
-//*@@StateNames:0@@*/
+/*@@CodeBlockValues:0@@*/
 
-  /* Used to index into each entry in the StateTable. */
-enum STI {
-  STI_CBIdx = 0, STI_StateIdx = 1, STI_StateLenIdx = 2, STI_StatesIdx = 3
-};
+/*@@StateNames:0@@*/
+
+/*@@StateValues:0@@*/
+
+/*@@STIValues:0@@*/
 
 /*@@StateTable:0@@*/
+
+/*@@StartState:0@@*/
+/*@@EndState:0@@*/
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,9 @@
+#@@CopyFile@@
+from SCons.Environment import Environment
+
+env = Environment()
+
+Src = ['Src/CExample.c', 'Src/Converters.c', 'Src/DList.c', 'Src/FileInfo.c',
+       'Src/StateMachine.c', 'Src/String.c']
+
+env.Program(target='StateMachine', source=Src)

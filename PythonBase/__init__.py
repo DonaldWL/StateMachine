@@ -25,7 +25,7 @@ Update History:
 -----------------------------------------------------------------------------
 '''
 
-from PythonBase.StateMachine import (CodeBlockEntryDef, 
+from .StateMachine import (CodeBlockEntryDef, 
                            CStateMachine,
                            StateTableEntryDef,
                            StateMachineError)

@@ -40,25 +40,27 @@ namespace ExampleCSharp
   class CSMT
   {
     //@@CodeBlockNames:4@@
-    public static int CBLen = 7; //@@RemoveLine@@
-    public static string[] CodeBlockNames = { "CloseFiles", "CopyFile" }; //@@RemoveLine@@
+    
+    //@@CodeBlockValues:4@@
+    public static readonly int CBLen = 7; //@@RemoveLine@@
+    public static readonly string[] CodeBlockNames = { "CloseFiles", "CopyFile" }; //@@RemoveLine@@
     public enum CB { CloseFiles = 0, CopyFile = 1 }; //@@RemoveLine@@
 
     //@@StateNames:4@@
+    
+    //@@StateValues:4@@
     public static int SNLen = 8; //@@RemoveLine@@
     public static string[] StateNames = { "CloseFiles", "CloseFilesError" }; //@@RemoveLine@@
     public enum ST { CloseFiles = 0, CloseFilesError = 1 }; //@@RemoveLine@@
+    public static readonly int CB_CloseFiles = 0; //@@RemoveLine@@
+    public static readonly int CB_CopyFile = 1; //@@RemoveLine@@
 
-    // Used to index into each entry in the StateTable.
-    public enum STI
-    {
-      CBIdx = 0,
-      StateIdx = 1,
-      StateLenIdx = 2,
-      StatesIdx = 3
-    };
+    //@@STIValues:4@@
 
     //@@StateTable:4@@
+    
+    //@@StartState:4@@
+    //@@EndState:4@@
     public static int STLen = 55; //@@RemoveLine@@
     public static int[] StateTable = { (int) CB.CloseFiles, (int) ST.CloseFiles, 3, 32, 21, 21, -1 }; //@@RemoveLine@@
     public static int StartStateIndx = 49; //@@RemoveLine@@

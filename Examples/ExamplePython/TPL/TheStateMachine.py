@@ -74,11 +74,10 @@ class CTheStateMachine(CStateMachine):
 #   @@CodeBlockTable@@
     self.CB = CBB # Used to allow access outside of __init__
     
-#   @@StartState@@
-#   @@EndState@@
-  
     class STT(IntEnum): T = 0 # @@RemoveLine@@ pylint: disable=multiple-statements
 #   @@StateTable@@
+#   @@StartState@@
+#   @@EndState@@
     self.ST = STT  # Used to allow access outside of __init__
     
     self.StateNames = ('a', ) # @@RemoveLine@@

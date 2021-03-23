@@ -49,8 +49,11 @@ import sys
 from PythonLib.Base.CodeTimer import CCaptureTimer
 from PythonLib.Base.CodeTimer import CCodeTimer
 from StateMachine.SMS.Definitions import LanguagesSupported
-from StateMachine.Generator.Languages.Python import _CPython
-from StateMachine.Generator.Languages.CPP import _CCPP
+from StateMachine.Generator.Languages.PythonLan import _CPythonLan
+from StateMachine.Generator.Languages.CLan import _CCLan
+from StateMachine.Generator.Languages.CPPLan import _CCPPLan
+from StateMachine.Generator.Languages.CSharpLan import _CCSharpLan
+from StateMachine.Generator.Languages.JavaLan import _CJavaLan
 
   #--------------------------------------------------------------------------
 class CGenerator(object):
@@ -76,6 +79,12 @@ class CGenerator(object):
       should not append an EOL.
     SMSResult
       Is the result from SMS package.
+    Optimize
+      If True then no otherwise is allowed and no filling of the
+      return codes is allowed.  Also the number of return codes
+      will not be placed in the state table.  This will allow
+      you to write the state machine to be as fast as possible
+      and have the memory foot print as small as possible.
       
   Exceptions:
     AttributeError
@@ -84,7 +93,7 @@ class CGenerator(object):
       The exception of the Generator package.  Something went wrong.
       Any exception besides AttributeError will be this exception.
   '''
-  def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult):
+  def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult, Optimize):
     self._Language = Language
     self._TPLDir = TPLDir
     self._STMDir = STMDir
@@ -92,6 +101,7 @@ class CGenerator(object):
     self._LogFh = LogFh
     self._SMSResult = SMSResult
     self._CaptureTimer = CCaptureTimer()
+    self._Optimize = Optimize
     
     if self._LogFh is None:
       self._LogFh = sys.stdout
@@ -125,6 +135,9 @@ class CGenerator(object):
     if not Language in LanguagesSupported:
       raise AttributeError('Language {0} is not supported ({1})'.format(Language, ','.join(LanguagesSupported)))
     
+    if not isinstance(Optimize, bool):
+      raise AttributeError('Optimize must be a bool')
+    
     #--------------------------------------------------------------------------
   def Process(self):
     '''
@@ -134,9 +147,15 @@ class CGenerator(object):
     '''
     ClassToProcess = None
     if self._Language == 'Python':
-      ClassToProcess = _CPython
-    else:   # 'CPP', 'C', 'CSharp', 'Java'
-      ClassToProcess = _CCPP
+      ClassToProcess = _CPythonLan
+    elif self._Language == 'C':
+      ClassToProcess = _CCLan
+    elif self._Language == 'CSharp':
+      ClassToProcess = _CCSharpLan
+    elif self._Language == 'Java':
+      ClassToProcess = _CJavaLan
+    else: # CPP
+      ClassToProcess = _CCPPLan
 
     with CCodeTimer('TPL/STM', self._CaptureTimer):
       ClassToProcess(Language = self._Language, 
@@ -144,7 +163,8 @@ class CGenerator(object):
                      STMDir = self._STMDir,
                      OverWrite = self._OverWrite,
                      LogFh = sys.stdout,
-                     SMSResult = self._SMSResult).Process()
+                     SMSResult = self._SMSResult,
+                     Optimize = self._Optimize).Process()
 
     #--------------------------------------------------------------------------
   @property

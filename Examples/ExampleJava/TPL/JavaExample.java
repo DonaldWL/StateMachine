@@ -47,13 +47,16 @@ public class JavaExample {
 	public static final int ECodes_CanNotCreateDir = 7;
 	
   public static void main(String[] args) throws IOException {
-    String InFileDir = "./";
+    String InFileDir = "../Src";
     String OutFileDir = "../CopyFiles";
     boolean  ForceOverwrite = false;
     String TraceFileName = "../StateMachineTrace.log";
     boolean  TraceFriendly = false;
     String LogFileName = "../StateMachine.log";
 
+    Path t = Paths.get(System.getProperty("user.dir"));
+    InFileDir = Paths.get(t.toString(), InFileDir).toString();
+    OutFileDir = Paths.get(t.toString(), OutFileDir).toString();
     File xOutFile = new File(OutFileDir);
     if (xOutFile.exists() && !xOutFile.isDirectory()) {
 			System.out.format("OutFileDir exists and is not a directory (%s)\n", OutFileDir);

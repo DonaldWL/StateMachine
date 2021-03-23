@@ -34,12 +34,12 @@ from StateMachine.Generator.Languages.Base import _CBase
 
 
   #--------------------------------------------------------------------------
-class _CPython(_CBase):
+class _CPythonLan(_CBase):
   '''
   See the _CBase class for details.
   '''
-  def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult):  
-    _CBase.__init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult)
+  def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult, Optimize):  
+    _CBase.__init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult, Optimize)
     
     if Language != 'Python':
       raise AttributeError('_CPython only supports generation of python code, language passed in ({0})'.format(Language))
@@ -70,7 +70,7 @@ class _CPython(_CBase):
     StartState tag.
     '''
     StartStateId = self._SMSResult.StateNames.index(self._SMSResult.States.StartState.Param)
-    self._STMFileFh.write((' ' * self._ForcedOffset) + 'self.StartState = ' + str(StartStateId) + '\n')
+    self._STMFileFh.write((' ' * self._ForcedOffset) + 'self.StartStateIdx = ' + str(StartStateId) + '\n')
     
     #--------------------------------------------------------------------------
   def _EndState(self):
@@ -80,7 +80,7 @@ class _CPython(_CBase):
     EndStateId = -1
     if self._SMSResult.States.EndState is not None:
       EndStateId = self._SMSResult.StateNames.index(self._SMSResult.States.EndState.Param)
-    self._STMFileFh.write((' ' * self._ForcedOffset) + 'self.EndState = ' + str(EndStateId) + '\n')
+    self._STMFileFh.write((' ' * self._ForcedOffset) + 'self.EndStateIdx = ' + str(EndStateId) + '\n')
     
     #--------------------------------------------------------------------------
   def _ClassDefinition(self):

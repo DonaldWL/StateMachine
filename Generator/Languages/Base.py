@@ -39,6 +39,7 @@ from collections import namedtuple
 from PythonLib.Base.StringHandlers import SkipWhiteSpace
 from StateMachine.SMS.Definitions import LanguagesSupported
 
+
   #--------------------------------------------------------------------------
 class GenException(Exception):
   pass
@@ -55,16 +56,28 @@ class _CBase(ABC):
   for your use.  Just read the code, to many to doc.
   '''
   CmdExecDef = namedtuple('CmdExec', ['Method', 'Value'])
+  
+    # Each item in self._StateInfo. 
+    #   Indx
+    #     Is the indx in the state table for this state
+    #   OtherWise
+    #     Is the otherwise setting.  If optimize this will always
+    #     be an empty string.
+    #   CodeBlockName
+    #     Is the name of the code block for this state entry
+    #   TransStates
+    #     Is a list of the transitions.  If optimize will not be filled.
+  StateInfoDef = namedtuple('StateInfo', ['Indx', 'OtherWise', 'CodeBlockName', 'TransStates'])
 
-  def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult):  
+  def __init__(self, Language, TPLDir, STMDir, OverWrite, LogFh, SMSResult, Optimize):  
     self._Language = Language
     self._TPLDir = TPLDir
     self._STMDir = STMDir
     self._OverWrite = OverWrite
     self._LogFh = LogFh
     self._SMSResult = SMSResult
+    self._Optimize = Optimize
 
-    self._WordReplacementCmds = {}
     self._TPLLineCnt = 0
     self._STMFileFh = None
     self._FileLanguage = None
@@ -84,6 +97,16 @@ class _CBase(ABC):
                                 if os.path.isfile(os.path.join(self._TPLDir, f)) and f[0] != '.']
     if not self._TPLFilesToProcess:
       raise AttributeError('No files found to process in TPLDir ({0})'.format(self._TPLDir))
+    
+    self._StateInfo = {}       # Holds all the State infor, key is StatName, item is StateInfoDef
+    self._StartStateIndx = -1  # Index into the table for the start state
+    self._EndStateIndx = -1    # Index into the table for end state.  This is really only needed
+                               # for python
+    self._STLen = 0            # Length of the state table.
+    self._MaxTranLen = 0       # Maximum length of trans.  Used to position the comment after each
+                               # enty of the state table.
+                               
+    self._BuildStateInfo()
 
     #--------------------------------------------------------------------------
   def Process(self):
@@ -122,6 +145,85 @@ class _CBase(ABC):
       except (IOError, SystemError) as err:
         raise GenException("Open Error on TPL {0} => {1}".format(self._TPLFileName, str(err))) from err
 
+    #--------------------------------------------------------------------------
+  def _BuildStateInfo(self):
+    '''
+    Builds up the state info.  This is used to complete the state table.
+    '''
+    self._StateInfo = {}
+    self._StartStateIndx = -1
+    self._EndStateIndx = -1
+    self._STLen = 0
+    self._MaxTranLen = 0
+
+    for StateName in self._SMSResult.StateNames:
+      if StateName == self._SMSResult.States.StartState.Param:
+        self._StartStateIndx = self._STLen
+      elif StateName == self._SMSResult.States.EndState.Param:
+        self._EndStateIndx = self._STLen
+        
+      StateRec = self._SMSResult.States.StateList[StateName]
+      StateTransRec = StateRec.Transitions
+      _ListRValues = list(StateTransRec.keys())
+      OtherWiseState = ''
+      
+        # If otherwise is defined in the SMS file and we have optimize set
+        # then error.  You can not use otherwise with optimize.
+      if 'OtherWise' in _ListRValues and self._Optimize:
+        raise AttributeError('If argument Optimize is true you can not have an otherwise ({0})'.format(StateName))
+
+      if 'OtherWise' in _ListRValues:
+        OtherWiseState = StateTransRec['OtherWise'].State
+        _ListRValues.remove('OtherWise')
+      self._StateInfo[StateName] = self.StateInfoDef(self._STLen, OtherWiseState, 
+                                                     self._SMSResult.States.StateList[StateName].CodeBlock, [])
+
+        # Fill in all the missing r values.  If the SMS file RValues are not
+        # filled i.e., 0, 3, 5 then fill in with 0, 1, 2, 3, 4, 5.  
+      _ListRValues = list(range(0, max(list(map(int, _ListRValues))) + 1))
+      for Idx in range(0, len(_ListRValues)):
+        if str(Idx) in StateTransRec.keys():
+          self._StateInfo[StateName].TransStates.append(StateTransRec[str(Idx)].State)
+        else:
+          self._StateInfo[StateName].TransStates.append(OtherWiseState)
+
+      if self._Optimize:
+        if '' in self._StateInfo[StateName].TransStates:
+          raise AttributeError('If argument Optimize is true you can not have return values that are not sequential ({0})'.format(StateName))
+        self._STLen += len(self._StateInfo[StateName].TransStates) + 1
+      else:
+        self._STLen += len(self._StateInfo[StateName].TransStates) + 4
+        
+    self._CalcMaxTranLen()
+
+    #--------------------------------------------------------------------------
+  def _CalcMaxTranLen(self):
+    '''
+    Figure out the max trans length
+    '''
+      # Get MaxTranLen for comment at end of each table entry.
+    for StateName, xStateInfo in self._StateInfo.items():
+      TLen = len(xStateInfo.CodeBlockName) + 5
+      if not self._Optimize:
+        TLen += len(StateName) + 5
+        TLen += len(str(len(xStateInfo.TransStates))) + 2
+      else:
+        TLen += len(str(len(xStateInfo.TransStates)))
+      
+      for TranState in xStateInfo.TransStates:
+        if TranState in self._StateInfo.keys():
+          TLen += len(str(self._StateInfo[TranState].Indx)) + 2
+        else:
+          TLen += 3
+      if not self._Optimize:
+        if self._StateInfo[StateName].OtherWise:
+          TLen += len(str(self._StateInfo[self._StateInfo[StateName].OtherWise].Indx)) + 2
+        else:
+          TLen += 3
+      self._MaxTranLen = max(self._MaxTranLen, TLen)
+    if not self._Optimize:
+      self._MaxTranLen += 1
+        
     #--------------------------------------------------------------------------
   def _ProcessLine(self):
     '''
@@ -206,9 +308,12 @@ class _CBase(ABC):
     '''
     StartStateValue tag
     '''
-    StartStateId = self._SMSResult.StateNames.index(self._SMSResult.States.StartState.Param)
     SCmdExecEntry = self._CmdExecEntry
-    self._CmdExecEntry = self.CmdExecDef(None, str(StartStateId))
+    if self._Language == 'Python':
+      StartStateId = self._SMSResult.StateNames.index(self._SMSResult.States.StartState.Param)
+      self._CmdExecEntry = self.CmdExecDef(None, str(StartStateId))
+    else:
+      self._CmdExecEntry = self.CmdExecDef(None, str(self._StartStateIndx))
     self._CmdReplacement()
     self._CmdExecEntry = SCmdExecEntry
 
@@ -217,13 +322,19 @@ class _CBase(ABC):
     '''
     EndStateValue tag
     '''
-    EndStateId = -1
-    if self._SMSResult.States.EndState is not None:
-      EndStateId = self._SMSResult.StateNames.index(self._SMSResult.States.EndState.Param)
-    self._CmdExecEntry = self.CmdExecDef(None, str(EndStateId))
+    SCmdExecEntry = self._CmdExecEntry
+    if self._Language == 'Python':
+      EndStateId = -1
+      if self._SMSResult.States.EndState is not None:
+        EndStateId = self._SMSResult.StateNames.index(self._SMSResult.States.EndState.Param)
+      self._CmdExecEntry = self.CmdExecDef(None, str(EndStateId))
+    else:
+      self._CmdExecEntry = self.CmdExecDef(None, str(self._EndStateIndx))
     self._CmdReplacement()
+    self._CmdExecEntry = SCmdExecEntry
 
     #--------------------------------------------------------------------------
+    # TODO: Remove
   def _CmdReplacement(self):
     '''
     A general command replacement.  Replaces the tag with the value in
@@ -247,7 +358,23 @@ class _CBase(ABC):
       if xEndCmdOffset != -1:
         xEndCmdOffset += 2
         xCmd = xTplLine[xStrtCmdOffset + 2:xEndCmdOffset - 2]
-        if self._WordReplacementCmds[xCmd] is not None:
-          xTplLine = xTplLine.replace('@@' + xCmd + '@@', self._WordReplacementCmds[xCmd])
-    self._STMFileFh.write((' ' * self._ForcedOffset) + xTplLine)
+        
+        if xCmd in self._CmdExec.keys():
+          xTplLine = (' ') * self._ForcedOffset + xTplLine
+          sTplLine = self._TplLine
+          sCmd = self._Cmd
+          self._TplLine = xTplLine
+          self._Cmd = xCmd
+          sCmdExecEntry = self._CmdExecEntry
+
+          self._CmdExecEntry = self._CmdExec[self._Cmd]
+          self._CmdExec[self._Cmd].Method()
+                  
+          self._CmdExecEntry = sCmdExecEntry
+          self._TplLine = sTplLine
+          self._Cmd = sCmd
+        else:    
+          self._STMFileFh.write((' ' * self._ForcedOffset) + xTplLine)
+    else:    
+      self._STMFileFh.write((' ' * self._ForcedOffset) + xTplLine)
   

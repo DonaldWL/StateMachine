@@ -3,6 +3,8 @@
  <STMDir>  => is the location to place your results from the generator
  Language  => is the language that you are processing (C, CPP, Python, CSharp)
  Gen       => if passed in will generate your state machine to <STMDir>
+ Optimize  => If passed in will set optimize to True for the generator and this
+              will not allow otherwise and return values must be sequential.
  OverWrite => if passed in will overwrite all the STM files
  SMSReport => if passed in will generate the SMSReport
  <help>    => {-h [<topic> <topic>...]|-help[<topic> <topic>...]|-e|-ecodes

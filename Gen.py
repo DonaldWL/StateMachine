@@ -103,6 +103,7 @@ if __name__ == '__main__':
   GenSTM = False
   OverWrite = False
   OutPutSMSReport = False
+  Optimize = False
 
   print("{0} - {1} ({2})\n".format(PROGRAMNAME, VERSION, RELEASEDATE))
   
@@ -130,6 +131,8 @@ if __name__ == '__main__':
         GenSTM = True
       elif sys.argv[i] == 'OverWrite':
         OverWrite = True
+      elif sys.argv[i] == 'Optimize':
+        Optimize = True
       else:
         print('**** Error: Invalid argument {0}****\n'.format(sys.argv[i]))
         Help([])
@@ -187,7 +190,8 @@ if __name__ == '__main__':
                            STMDir = sys.argv[3],  
                            OverWrite = OverWrite,
                            LogFh = sys.stdout,
-                           SMSResult = MySmsProcess.Result)
+                           SMSResult = MySmsProcess.Result,
+                           Optimize = Optimize)
     Generator.Process()
     RunTimeGen = ConvertMillisecondsDays(Generator.ProcessingTime.Took)
     print('\nProcessing Time: {0}d {1}h {2}m {3}s {4}ms'.format(RunTimeGen.days, RunTimeGen.hours, RunTimeGen.minutes, 

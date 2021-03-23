@@ -34,14 +34,16 @@ Description:
 class CSMT
 {
   //@@CodeBlockNames:2@@
-  
-  //@@StateNames:2@@
 
-    // Used to index into state table.
-  public static final int STI_CBIdx = 0;
-  public static final int STI_StateIdx = 1;
-  public static final int STI_StateLenIdx = 2;
-  public static final int STI_StatesIdx = 3;
+  //@@CodeBlockValues:2@@
+
+  //@@StateNames:2@@
+  //@@StateValues:2@@
+
+  //@@STIValues:2@@
 
   //@@StateTable:2@@
+
+  //@@StartState:2@@
+  //@@EndState:2@@
 }

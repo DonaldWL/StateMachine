@@ -176,10 +176,16 @@ public class StateMachine {
           FilesIndx = 0;
           File xInFile = new File(InFileDir);
           Files = xInFile.list();
-          Log("Info", "Number of files to process (", Integer.toString(Files.length), 
-              ") from InFileDir (", InFileDir, ")");
+          if (Files != null) {
+	          Log("Info", "Number of files to process (", Integer.toString(Files.length), 
+	              ") from InFileDir (", InFileDir, ")");
 
-          if (Files.length == 0) {
+	          if (Files.length == 0) {
+	            StateRValue = 1;
+	            ReturnValue.UserData = Log("Error", "No files found to process at InFileDir (", InFileDir, ")");
+	            ReturnValue.UserRValue = URValue_NoFilesToProcess;
+	          }
+          } else {
             StateRValue = 1;
             ReturnValue.UserData = Log("Error", "No files found to process at InFileDir (", InFileDir, ")");
             ReturnValue.UserRValue = URValue_NoFilesToProcess;
@@ -220,6 +226,7 @@ public class StateMachine {
         case CSMT.CB_OpenFiles:
           StateRValue = 0;
 
+          InFileName = new File(Paths.get(InFileDir, InFileName.toString()).toString());
           Log("Info", "Opening file InFile ", InFileName.getAbsoluteFile().toString());
           try {
           	InFileFh = new BufferedReader(new FileReader(InFileName));

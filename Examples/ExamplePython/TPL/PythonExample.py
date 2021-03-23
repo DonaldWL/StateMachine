@@ -37,10 +37,10 @@ from PythonLib.Base.CodeTimer import (CCaptureTimer, CCodeTimer)
 from TheStateMachine import CTheStateMachine
 
 if __name__ == "__main__":
-  InFileDir = os.path.join(os.getcwd(), ".")
-  OutFileDir = os.path.join(os.getcwd(), "./CopiedFiles")
-  TraceFileName = os.path.join(os.getcwd(), "../StateMachineTrace.log")
-  LogFileName = os.path.join(os.getcwd(), "../StateMachine.log")
+  InFileDir = os.path.abspath(os.path.join(os.getcwd(), "./Src"))
+  OutFileDir = os.path.abspath(os.path.join(os.getcwd(), "./CopiedFiles"))
+  TraceFileName = os.path.abspath(os.path.join(os.getcwd(), "./StateMachineTrace.log"))
+  LogFileName = os.path.abspath(os.path.join(os.getcwd(), "./StateMachine.log"))
   TraceFileFh = None
   LogFileFh = None
   TraceFriendly = False
@@ -61,7 +61,7 @@ if __name__ == "__main__":
       for file in [os.path.join(OutFileDir, f) for f in os.listdir(OutFileDir) 
                      if os.path.isfile(os.path.join(OutFileDir, f)) and f[0] != '.']:
         os.remove(file)
-      os.remdir(OutFileDir)
+      os.rmdir(OutFileDir)
   os.mkdir(OutFileDir)
 
     # Create State Machine

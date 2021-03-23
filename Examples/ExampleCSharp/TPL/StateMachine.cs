@@ -129,14 +129,14 @@ namespace ExampleCSharp
       ReturnValue.UserData = "";
 
       while (ProcessStates) {
-        switch (CSMT.StateTable[CurStateIndx + (int) CSMT.STI.CBIdx]) {
+        switch (CSMT.StateTable[CurStateIndx + CSMT.STI_CBIdx]) {
 
             // StateRValue
             //   0 -> Ok
             //   1 -> InFileDir does not exist
             //        OutFileDir does not exist
             //        InFileDir and OutFileDir are the same
-          case (int) CSMT.CB.StartMachine:
+          case CSMT.CB_StartMachine:
             StateRValue = 0;
             InFileDir = Path.GetFullPath(InFileDir);
             Log("Info", "InFileDir set to ", InFileDir);
@@ -165,7 +165,7 @@ namespace ExampleCSharp
             // StateRValue
             //   0 -> Ok
             //   1 -> No files to process in InFileDir
-          case (int) CSMT.CB.GetFiles:
+          case CSMT.CB_GetFiles:
             StateRValue = 0;
             FilesIndx = 0;
             Files = Directory.GetFiles(InFileDir, "*");
@@ -186,7 +186,7 @@ namespace ExampleCSharp
             //   3 -> Out File already exists and user stated overwrite the file
             //   4 -> User does not wish to overwrite file
             //   5 -> User wishes to skip file, or is a log file to skip.
-          case (int) CSMT.CB.NextFile:
+          case CSMT.CB_NextFile:
             StateRValue = 0;
             if (FilesIndx == Files.Length) {
               StateRValue = 1;
@@ -225,7 +225,7 @@ namespace ExampleCSharp
             //   0 -> Ok
             //   1 -> Unable to open in file
             //   2 -> Unable to open out file
-          case (int) CSMT.CB.OpenFiles:
+          case CSMT.CB_OpenFiles:
             StateRValue = 0;
 
             Log("Info", "Opening file InFile ", InFileName);
@@ -238,7 +238,7 @@ namespace ExampleCSharp
               StateRValue = 1;
             }
 
-            OutFileName = Path.Join(OutFileDir, Path.GetFileName(InFileName));
+            OutFileName = Path.Combine(OutFileDir, Path.GetFileName(InFileName));
             Log("Info", "Opening file OutFile ", OutFileName);
             try {
               OutFileFh = new StreamWriter(OutFileName);
@@ -254,7 +254,7 @@ namespace ExampleCSharp
             //   0 -> Ok
             //   1 -> Read error on InFile
             //   2 -> Write error on OutFile
-          case (int) CSMT.CB.CopyFile:
+          case CSMT.CB_CopyFile:
             StateRValue = 0;
             string line;
 
@@ -283,7 +283,7 @@ namespace ExampleCSharp
             //   0->Ok
             //   1->Unable to close in file
             //   2->Unable to close out file
-          case (int)CSMT.CB.CloseFiles:
+          case CSMT.CB_CloseFiles:
             StateRValue = 0;
             if (InFileFh != null) {
               Log("Info", "Closing file InFile ", InFileName);
@@ -312,7 +312,7 @@ namespace ExampleCSharp
 
             // End the state machine.  We setup to drop out of the main
             // processing loop and return to the calling program.
-          case (int) CSMT.CB.EndMachine:
+          case CSMT.CB_EndMachine:
             StateRValue = 0;
             ProcessStates = false;
             if (ReturnValue.UserData == "") {
@@ -324,9 +324,9 @@ namespace ExampleCSharp
           default:
             ReturnValue.MachineRValue = MO.CodeBlockInvalid;
             ReturnValue.Msg = "Invalid CodeBlock => State: " +
-                              CSMT.StateNames[CSMT.StateTable[PrevCurStateIndx + (int) CSMT.STI.StateIdx]] +
+                              CSMT.StateNames[CSMT.StateTable[PrevCurStateIndx + CSMT.STI_StateIdx]] +
                               "  CodeBlock: " +
-                              CSMT.CodeBlockNames[CSMT.StateTable[PrevCurStateIndx + (int) CSMT.STI.CBIdx]] +
+                              CSMT.CodeBlockNames[CSMT.StateTable[PrevCurStateIndx + CSMT.STI_CBIdx]] +
                               "  StateRValue: " + StateRValue;
             Log("Error", ReturnValue.Msg);
             ProcessStates = false;
@@ -336,9 +336,9 @@ namespace ExampleCSharp
         if (StateRValue < 0) {
           ReturnValue.MachineRValue = MO.StateRValueInvalid;
           ReturnValue.Msg = "StateRValue is negative => State: " +
-                             CSMT.StateNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StateIdx]] +
+                             CSMT.StateNames[CSMT.StateTable[CurStateIndx + CSMT.STI_StateIdx]] +
                              "  CodeBlock: " +
-                             CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.CBIdx]] +
+                             CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + CSMT.STI_CBIdx]] +
                              "  StateRValue: " + StateRValue;
           Log("Error", ReturnValue.Msg);
           ProcessStates = false;
@@ -346,15 +346,15 @@ namespace ExampleCSharp
         }
 
         OtherWise = -1;
-        if (StateRValue > CSMT.StateTable[CurStateIndx + (int)CSMT.STI.StateLenIdx])
+        if (StateRValue > CSMT.StateTable[CurStateIndx + CSMT.STI_StateLenIdx])
         {
-          OtherWise = CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StateLenIdx + CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StateLenIdx] + 1];
+          OtherWise = CSMT.StateTable[CurStateIndx + CSMT.STI_StateLenIdx + CSMT.StateTable[CurStateIndx + CSMT.STI_StateLenIdx] + 1];
           if (OtherWise < 0) {
             ReturnValue.MachineRValue = MO.NoOtherWise;
             ReturnValue.Msg = "No Otherwise found => State: " +
-                              CSMT.StateNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StateIdx]] +
+                              CSMT.StateNames[CSMT.StateTable[CurStateIndx + CSMT.STI_StateIdx]] +
                               "  CodeBlock: " +
-                              CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.CBIdx]] +
+                              CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + CSMT.STI_CBIdx]] +
                               "  StateRValue: " + StateRValue;
             Log("Error", ReturnValue.Msg);
             ProcessStates = false;
@@ -366,14 +366,14 @@ namespace ExampleCSharp
           if (TraceFriendly) {
             TraceFh.WriteLine("State Trace");
             TraceFh.WriteLine("  State:         {0}", 
-                              CSMT.StateNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StateIdx]]);
+                              CSMT.StateNames[CSMT.StateTable[CurStateIndx + CSMT.STI_StateIdx]]);
             TraceFh.WriteLine("  CodeBlock:     {0}",
-                              CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.CBIdx]]);
+                              CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + CSMT.STI_CBIdx]]);
             TraceFh.WriteLine("  StateRValue:   {0}\n", StateRValue);
           } else {
             TraceFh.WriteLine("{0}: {1},{2},{3}", DateTime.Now.ToString("yyyy-MM-dd HH:MM:ss"),
-                              CSMT.StateNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StateIdx]],
-                              CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.CBIdx]],
+                              CSMT.StateNames[CSMT.StateTable[CurStateIndx + CSMT.STI_StateIdx]],
+                              CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + CSMT.STI_CBIdx]],
                               StateRValue);
           }
         }
@@ -382,14 +382,14 @@ namespace ExampleCSharp
         if (OtherWise > -1) {
           CurStateIndx = OtherWise;
         } else {
-          CurStateIndx = CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StatesIdx + StateRValue];
+          CurStateIndx = CSMT.StateTable[CurStateIndx + CSMT.STI_StatesIdx + StateRValue];
         }
         if (CurStateIndx > CSMT.STLen) {
           ReturnValue.MachineRValue = MO.NextStateIndxInvalid;
           ReturnValue.Msg = "Index into state table out of range => State: " +
-                            CSMT.StateNames[CSMT.StateTable[PrevCurStateIndx + (int) CSMT.STI.StateIdx]] +
+                            CSMT.StateNames[CSMT.StateTable[PrevCurStateIndx + CSMT.STI_StateIdx]] +
                             "  CodeBlock: " +
-                            CSMT.CodeBlockNames[CSMT.StateTable[PrevCurStateIndx + (int) CSMT.STI.CBIdx]] +
+                            CSMT.CodeBlockNames[CSMT.StateTable[PrevCurStateIndx + CSMT.STI_CBIdx]] +
                             "  StateRValue: " + StateRValue;
           Log("Error", ReturnValue.Msg);
           ProcessStates = false;
@@ -400,13 +400,13 @@ namespace ExampleCSharp
       if (ProcessStates) {
         ReturnValue.MachineRValue = MO.ExitedMainLoop;
         ReturnValue.Msg = "Exited the main loop => State: " +
-                          CSMT.StateNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.StateIdx]] +
+                          CSMT.StateNames[CSMT.StateTable[CurStateIndx + CSMT.STI_StateIdx]] +
                           "  CodeBlock: " +
-                          CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + (int) CSMT.STI.CBIdx]] +
+                          CSMT.CodeBlockNames[CSMT.StateTable[CurStateIndx + CSMT.STI_CBIdx]] +
                           "  StateRValue: " + StateRValue;
         Log("Error", ReturnValue.Msg);
       }
-      return ReturnValue.UserRValue;
+      return (int) ReturnValue.UserRValue;
     }
 
     private string Log(string _MsgType, params object[] list)

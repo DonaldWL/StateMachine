@@ -151,19 +151,19 @@ public:
 private:
   CStateMachine();
 
-  void Log(const char *_MsgType, int _ArgCnt, ...);
+  std::string Log(const char *_MsgType, int _ArgCnt, ...);
 
-//@@CodeBlockNames@@
+  //@@CodeBlockNames:2@@
 
-//@@StateNames@@
+  //@@CodeBlockValues:2@@
 
-    // Used to index into each entry in the StateTable.
-  enum STI {
-    STI_CBIdx = 0,
-    STI_StateIdx = 1,
-    STI_StateLenIdx = 2,
-    STI_StatesIdx = 3
-  };
+  //@@StateNames:2@@
+  //@@StateValues:2@@
 
-//@@StateTable@@
+  //@@STIValues:2@@
+
+  //@@StateTable:2@@
+
+  //@@StartState:2@@
+  //@@EndState:2@@
 };

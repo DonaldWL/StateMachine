@@ -115,8 +115,8 @@ class CStateMachine(metaclass=ABCMeta):
     self.TraceFileFh = TraceFileFh
     self.FriendlyTrace = FriendlyTrace
     self.StateRValue = -1
-    self.StartState = -1
-    self.EndState = -1
+    self.StartStateIdx = -1
+    self.EndStateIdx = -1
     self.CodeBlockTable = ()
     self.StateTable = ()
     self.StateNames = ()
@@ -149,7 +149,7 @@ class CStateMachine(metaclass=ABCMeta):
     state machine does not have to have an end state.  The end state can return
     anything it wishes.  So the definition of the return is up to the user.
     '''
-    _StateCmd = self.StartState
+    _StateCmd = self.StartStateIdx
     self.StateRValue = -1
     _PrevState = -2
     _xPrevState = -2
@@ -170,7 +170,7 @@ class CStateMachine(metaclass=ABCMeta):
 
         # Execute the code block, and if state is 0 we end.
       exec(_CodeExecute, self.Globals, self.Locals)  # pylint: disable=exec-used
-      if _StateCmd == self.EndState:
+      if _StateCmd == self.EndStateIdx:
         if self.TraceFileFh is not None:
           StateTableEntry = self.StateTable[_StateCmd]
   

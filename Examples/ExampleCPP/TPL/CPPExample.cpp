@@ -38,7 +38,7 @@ Description:
 #include "StateMachine.h"
 
 int main(int argc, const char* argv[]) {
-  std::filesystem::path InFileDir = std::filesystem::absolute("../../StateMachine/Examples/ExampleC/STM");
+  std::filesystem::path InFileDir = std::filesystem::absolute("./Src");
   std::filesystem::path OutFileDir = std::filesystem::absolute("./CopiedFiles");
   std::filesystem::path TraceLogFileName = std::filesystem::absolute("./StateMachineTrace.log");
   std::filesystem::path LogFileName = std::filesystem::absolute("./StateMachine.log");
@@ -48,7 +48,7 @@ int main(int argc, const char* argv[]) {
   bool ForceOverwrite = false;
 
 
-  if (std::filesystem::exists(OutFileDir) and not std::filesystem::is_directory(OutFileDir)) {
+  if (std::filesystem::exists(OutFileDir) && !std::filesystem::is_directory(OutFileDir)) {
     std::cout << "CopiedFiles exists and is not a directory" << std::endl;
     exit(5);
   }
