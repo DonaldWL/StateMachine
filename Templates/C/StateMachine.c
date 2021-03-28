@@ -1,9 +1,10 @@
+/*@@C@@*/
 /*
-SMS User Author:  Donald W. Long
-SMS User Date:    01/22/2021
-SMS User Version: 1.0
-Creation Date:    03/23/21
-SMS File Version: 1.0
+SMS User Author:  @@SMSUserAuthor@@
+SMS User Date:    @@SMSUserDate@@
+SMS User Version: @@SMSUserVersion@@
+Creation Date:    @@CreationDate@@
+SMS File Version: @@SMSFileVersion@@
 TPL Date:         02/11/2021
 TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
@@ -35,10 +36,6 @@ Description:
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-/*
-#include <string.h>
-#include <ctype.h>
-*/
 
 #include "StateMachine.h"
 #include "StateMachineTables.h"
@@ -82,41 +79,7 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
   while (ProcessStates) {
     switch (StateTable[CurStateIndx + STI_CBIdx]) {
 
-      case CB_CloseFiles:
-        printf("CB_CloseFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_CopyFile:
-        printf("CB_CopyFile\n");
-        StateRValue = 1;
-        break;
-
-      case CB_EndMachine:
-        printf("CB_EndMachine\n");
-        StateRValue = 0;
-        ProcessStates = false;
-        break;
-
-      case CB_GetFiles:
-        printf("CB_GetFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_NextFile:
-        printf("CB_NextFile\n");
-        StateRValue = 0;
-        break;
-
-      case CB_OpenFiles:
-        printf("CB_OpenFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_StartMachine:
-        printf("CB_StartMachine\n");
-        StateRValue = 0;
-        break;
+      @@CodeBlocks@@
       
       default:
         char *Msg = BuildMsg("Invalid CodeBlock => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",

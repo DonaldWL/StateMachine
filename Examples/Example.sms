@@ -1,15 +1,14 @@
-@SMSFileVersion 1.0
+@SMSFileVersion 2.0
 @Language Python CPP C CSharp Java
 @Author "Donald W. Long"
 @Date   01/22/2021
 @StateMachineName CTheStateMachine
 @Version 1.0
-@CodeBlockType Method  # Set to Method for python, C and CPP does not care.
 
   # Define all the code blocks.  Showing both methods
   # on how to define code blocks.  Most of the time
   # you use @CodeBlocks
-@CodeBlock StartMachine Method    # Set to Method for python, C and CPP does not care.
+@CodeBlock StartMachine
 @CodeBlocks GetFiles NextFile OpenFiles
 @CodeBlocks CopyFile CloseFiles EndMachine
 

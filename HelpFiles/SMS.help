@@ -31,10 +31,8 @@ SYNTAX
     <StateDefinition>  ::= @BeginStates <StartState> [<EndState>]\n<StateDef>[\n<StateDef>...]\n@EndStates
     <StartState>       ::= <name>
     <EndState>         ::= <name>
-    <CodeBlock>        ::= @CodeBlock <CodeBlockName> [<CTypes>]
+    <CodeBlock>        ::= @CodeBlock <CodeBlockName>
     <CodeBlocks>       ::= @CodeBlocks <CodeBlockName> [<CodeBlockName>...]
-    <CodeBlockType>    ::= @CodeBlockTypes <CTypes>
-    <CTypes>           ::= {Code|Method}
     <Date>             ::= @Date <string>
     <Language>         ::= @Language {C|CPP|Python} [{C|CPP|Python}...]
     <SMSFileVersion>   ::= @SMSFileVersion 1.0
@@ -53,20 +51,16 @@ SYNTAX
     system that this file is targeted for.  Currently that is only '1.0'.  The second line in the
     file must be '@Language'.  You can have one language or as many as you wish.  You must have 
     defined at least one code block and also at least one state.  Otherwise nothing to generate.
-    The default for @CodeBlockTypes is 'Code'.
     
     Below is a very simple file to show you how it works.  Also, see the Example SMS file.  Comments
     are allowed on a line by itself or after the command, like Python.  Comments start with '#', just
     like Python.
     
-      @SMSFileVersion 1.0
+      @SMSFileVersion 2.0
       @Language Python CPP C  
 
         # Define all the code blocks.  You can do each one with @CodeBlock or just
-        # define all of the with @CodeBlocks.  The advantage of @CodeBlock is you can
-        # set the type of code block.  This really is only for Python code.  C and CPP
-        # do not care.  See why in the help for the Generator package.   
-      @CodeBlock StartMachine Method
+        # define all of the with @CodeBlocks.   
       @CodeBlocks CodeBlock1 CodeBlock2 CodeBlock3
       @CodeBlocks CodeBlock4 CEnd CErr
  

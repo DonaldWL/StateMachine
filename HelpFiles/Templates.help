@@ -1,0 +1,64 @@
+Under the directory 'Templates' you will find a template for each language.
+All the languages but 'Python' have also an optimize template.  The optimize
+template, removes all the checking of the state machine engine and also 
+compresses the tables and uses as few tables as possible.  This will make
+the code run faster and not be as bloated.
+
+Before you start to use these templates you should look at the examples in
+the 'Examples' directory.  You will find an optimize and a non optimize
+example for all languages but 'Python'.  Play with the examples before you
+start your state machine from the templates.  I recommend you do not 
+start from the examples for your code but from the templates.  You will end
+up with cleaner code at the end.
+
+Remember the templates are not a fully functioning program.  They just have
+enough code to run the state machine.  You should modify the templates to
+meet your needs.  You may not wish to have trace, you may remove logging or
+what every else you with to do.
+
+Each template, is setup to create the entries for your code blocks.  Thus,
+you need to make sure that you only run the file that generated the code
+blocks once, or start adding your code blocks to the template and remove 
+'@@CodeBlocks@@' from the file.  I would recommend that you create your
+SMS file and do one run and then copy the generated switch statements 
+back to the template and work from that location for your code.  Or just
+do not process the StateMachine.c[cpp].... 
+
+Just remember not to generate and loose your code you have already created.
+
+Use the 'Gen.py' program to generate your code.  The best way to set this
+up is to run the 'BuildExamples.py' and capture its output and you will
+find a line for each example on how it ran the 'Gen.py' program.  Find 
+the language that you are working with and capture that line and make
+your changes for your state machine.  Remember if you are doing an
+optimize template make sure you get the optimize run from 'BuildExamples.py'.
+You can tell this because the last argument to 'Gen.py' is 'optimize'.
+
+Below is an example of running 'Gen.py' on 'C' language for optimize and non
+optimize.  The arguments have been broken up on lines to fit the help 
+format.
+
+  NON OPTIMIZE
+    python ../Gen.py D:\Programming\Projects\StateMachine\Examples\Example.sms 
+                     D:\Programming\Projects\StateMachine\Examples\ExampleC\TPL 
+                     D:\Programming\Projects\StateMachine\Examples\Results\ExampleC\Src 
+                     Language C 
+                     SMSReport 
+                     Gen 
+                     OverWrite
+
+
+  OPTIMIZE
+    python ../Gen.py D:\Programming\Projects\StateMachine\Examples\Example.sms 
+                     D:\Programming\Projects\StateMachine\Examples\ExampleOptimizeC\TPL 
+                     D:\Programming\Projects\StateMachine\Examples\Results\ExampleOptimizeC\Src 
+                     Language C 
+                     SMSReport 
+                     Gen 
+                     OverWrite 
+                     Optimize
+                     
+As you can see from above the only difference between the two is the argument 'Optimize'.  This
+is used to tell the generator how to generate the state table.  You can still add other tables
+to your template if you wish for tracing, but the optimize templates have the miniumum that is
+required and still be able to trace and run.

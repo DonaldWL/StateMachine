@@ -10,7 +10,7 @@ os.chdir(os.path.dirname(__file__))
   # Make sure our PythonLib and StateMachine are in the path.
   # We assume that PythonLib and StateMachine are at the same 
   # level.  If not you will have to change this.
-BasePath = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
+BasePath = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(BasePath)
 
 from PythonLib.Base.CodeTimer import (CCaptureTimer, CCodeTimer)
@@ -25,8 +25,8 @@ class ExitCodes(IntEnum):
   ERRORONGENPROGRAM = 6
   INVALIDARGS       = 7
 
-ExampleBaseDir = os.path.join(BasePath, 'Examples')
-TPLExampleBaseDir = os.path.abspath('./Examples')
+ExampleBaseDir = os.path.abspath(os.path.join(BasePath, 'Results'))
+TPLExampleBaseDir = os.path.abspath('./')
 
 Examples = {'ExampleC':              ['Language', 'C', 'SMSReport', 'Gen', 'OverWrite'],
             'ExampleOptimizeC':      ['Language', 'C', 'SMSReport', 'Gen', 'OverWrite', 'Optimize'],
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     for Example in Examples:
       print("Processing {0}".format(Example))
       try:  
-        ProcessDir = ExampleDir = os.path.join(ExampleBaseDir, Example)
+        ProcessDir = ExampleDir = os.path.abspath(os.path.join(ExampleBaseDir, Example))
         if not os.path.exists(ProcessDir):
           os.mkdir(ProcessDir)
         ProcessDir = ExampleSrcDir = os.path.join(ExampleDir, 'Src')
@@ -102,7 +102,7 @@ if __name__ == '__main__':
       
       SMSFile = os.path.join(TPLExampleBaseDir, 'Example.sms')
       TPLDir = os.path.abspath(os.path.join(TPLExampleBaseDir, Example, 'TPL'))
-      PopenArgs = ['python', 'Gen.py', SMSFile, TPLDir, ExampleSrcDir] + Examples[Example]
+      PopenArgs = ['python', '../Gen.py', SMSFile, TPLDir, ExampleSrcDir] + Examples[Example]
       print('+' * 50)
       print("Info: {0}".format(' '.join(PopenArgs)))
       print('+' * 50)

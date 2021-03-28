@@ -179,7 +179,6 @@ class CSMSProcess(object):
                      '@StateMachineName': _ExecRecDef(self._SetCmdWithParam, 'StateMachineName'),
                      '@Version': _ExecRecDef(self._SetCmdWithParam, 'Version'),
                      '@SMSFileVersion': _ExecRecDef(self._SetSMSFileVersion, 'SMSFileVersion'),
-                     '@CodeBlockType': _ExecRecDef(self._CodeBlockTypeCmd, 'CodeBlockType'),
                      '@CodeBlocks': _ExecRecDef(self._CodeBlocksCmd, 'CodeBlocks'),
                      '@CodeBlock': _ExecRecDef(self._CodeBlockCmd, 'CodeBlocks'),
                      '@Language': _ExecRecDef(self._LanguageCmd, 'Language'),
@@ -326,20 +325,6 @@ class CSMSProcess(object):
     return True
 
     #--------------------------------------------------------------------------
-  def _CodeBlockTypeCmd(self, CmdRecord, PrevCmdRecord):
-    '''
-    Handles the @CodeBlockType command
-    '''
-    if self._SetCmdWithParam(CmdRecord, PrevCmdRecord):
-      if not self._Result.CodeBlockType.Value in _CodeBlockTypes:
-        self._SyntaxError('Invalid param must be one of {0}'.format(_CodeBlockTypes),
-                          CmdRecord.Params[0].Offset, self.EchoLine, CmdRecord.Line, CmdRecord.LineNo)
-      else:
-        return True
-
-    return False
-
-    #--------------------------------------------------------------------------
   def _CodeBlocksCmd(self, CmdRecord, PrevCmdRecord):
     if not CmdRecord.Params:
       self._SyntaxError('No code block names, must at least have one',
@@ -361,23 +346,17 @@ class CSMSProcess(object):
     '''
     Handles the @CodeBlock command
     '''
-    if (not CmdRecord.Params):
+    if not CmdRecord.Params:
       self._SyntaxError('Missing required parameter, non given, need at lest the name of the code block.',
                         CmdRecord.CmdOffset, self.EchoLine, CmdRecord.Line, CmdRecord.LineNo)
-    elif (len(CmdRecord.Params) > 2):
-      self._SyntaxError('To many params only two are allowed and one is required, <codeblockname> [<codetype>]',
+    elif len(CmdRecord.Params) > 1:
+      self._SyntaxError('To many params only one is required, <codeblockname>',
                         CmdRecord.Params[1].Offset, self.EchoLine, CmdRecord.Line, CmdRecord.LineNo)
-    elif len(CmdRecord.Params) == 2 and CmdRecord.Params[1].Param not in _CodeBlockTypes:
-      self._SyntaxError('Invalid param code block type must be {0}'.format(' or '.join(_CodeBlockTypes)),
-                        CmdRecord.Params[0].Offset, self.EchoLine, CmdRecord.Line, CmdRecord.LineNo)
     elif CmdRecord.Params[0].Param in self._Result.CodeBlocks.keys():
       self._SyntaxError('CodeBlock already defined at {0}'.format(self._Result.CodeBlocks[CmdRecord.Params[0].Param].LineNo),
                         CmdRecord.CmdOffset, self.EchoLine, CmdRecord.Line, CmdRecord.LineNo)
     else:
-      CodeType = None
-      if len(CmdRecord.Params) == 2:
-        CodeType = CmdRecord.Params[1].Param      
-      self._Result.CodeBlocks[CmdRecord.Params[0].Param] = CodeBlockDef(CmdRecord.LineNo, CodeType)
+      self._Result.CodeBlocks[CmdRecord.Params[0].Param] = CodeBlockDef(CmdRecord.LineNo, 'Code')
       return True
     
     return False

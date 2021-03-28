@@ -1,4 +1,4 @@
-//*@@C@@*/
+/*@@C@@*/
 /*
 SMS User Author:  @@SMSUserAuthor@@
 SMS User Date:    @@SMSUserDate@@
