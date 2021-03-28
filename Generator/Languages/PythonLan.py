@@ -55,14 +55,19 @@ class _CPythonLan(_CBase):
     self._CmdExec['ClassName'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.StateMachineName.Value)
     self._CmdExec['SMSFileVersion'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.SMSFileVersion.Value)
     self._CmdExec['CodeBlocks'] = self.CmdExecDef(self._CodeBlocks, None)
+    self._CmdExec['Methods'] = self.CmdExecDef(self._Methods, None)
     self._CmdExec['CodeBlockNames'] = self.CmdExecDef(self._CodeBlockNames, None)
     self._CmdExec['StateNames'] = self.CmdExecDef(self._StateNames, None)
     self._CmdExec['StateTable'] = self.CmdExecDef(self._StateTable, None)
+    self._CmdExec['StateValues'] = self.CmdExecDef(self._StateValues, None)
     self._CmdExec['StartState'] = self.CmdExecDef(self._StartState, None)
     self._CmdExec['StartStateValue'] = self.CmdExecDef(self._StartStateValue, None)
     self._CmdExec['EndState'] = self.CmdExecDef(self._EndState, None)
     self._CmdExec['EndStateValue'] = self.CmdExecDef(self._EndStateValue, None)
     self._CmdExec['CodeBlockTable'] = self.CmdExecDef(self._CodeBlockTable, None)
+    self._CmdExec['CodeBlockValues'] = self.CmdExecDef(self._CodeBlockValues, None)
+    self._CmdExec['CollectionDefs'] = self.CmdExecDef(self._CollectionDefs, None)
+    self._CmdExec['Imports'] = self.CmdExecDef(self._Imports, None)
 
     #--------------------------------------------------------------------------
   def _StartState(self):
@@ -93,12 +98,27 @@ class _CPythonLan(_CBase):
     self._TplLine = STplLine
     
     #--------------------------------------------------------------------------
-  def _StateTable(self):
+  def _Imports(self):
     '''
-    StateTable tag.  Creates the state table.
+    IMports tag.
     '''
+    Line = (' ' * self._ForcedOffset) + "from collections import namedtuple\n"
+    self._STMFileFh.write(Line)
     
-      # Write Out the STT enum class
+    #--------------------------------------------------------------------------
+  def _CollectionDefs(self):
+    '''
+    CollectionDefs tag.
+    '''
+    Line = (' ' * self._ForcedOffset) + "CBEntryDef = namedtuple('CBEntry', ['CBIndx', 'Code'])\n"
+    Line += (' ' * self._ForcedOffset) + "STEntryDef = namedtuple('STEntry', ['CodeBlock', 'StateTransitions', 'Otherwise'])\n"
+    self._STMFileFh.write(Line)
+    
+    #--------------------------------------------------------------------------
+  def _StateValues(self):
+    '''
+    Create the enum for states.
+    '''
     IndentSpaces = ' ' * self._ForcedOffset
     Line = IndentSpaces + 'class STT(IntEnum):\n'
     IndentSpaces += '  '
@@ -108,8 +128,12 @@ class _CPythonLan(_CBase):
                                      self._SMSResult.StateNames[StateId],
                                      StateId)
       self._STMFileFh.write(Line)
-    self._STMFileFh.write('\n')
-    
+
+    #--------------------------------------------------------------------------
+  def _StateTable(self):
+    '''
+    StateTable tag.  Creates the state table.
+    '''
     IndentSpaces = ' ' * self._ForcedOffset
     Line = (' ' * self._ForcedOffset) + 'self.StateTable = ('
     IndentSpaces = ' ' * len(Line)
@@ -153,10 +177,10 @@ class _CPythonLan(_CBase):
     self._STMFileFh.write(CLine)
       
     #--------------------------------------------------------------------------
-  def _CodeBlockTable(self):
+  def _CodeBlockValues(self):
     '''
-    CodeBlockTable tag.  Creates the CodeBlock Table.
-    '''
+    Create the code block enum.
+    ''' 
       # Write Out the CB enum class
     IndentSpaces = ' ' * self._ForcedOffset
     Line = IndentSpaces + 'class CBB(IntEnum):\n'
@@ -167,16 +191,17 @@ class _CPythonLan(_CBase):
                                      self._SMSResult.CodeBlockNames[CodeBlockId],
                                      CodeBlockId)
       self._STMFileFh.write(Line)
-    self._STMFileFh.write('\n')
-    
+
+    #--------------------------------------------------------------------------
+  def _CodeBlockTable(self):
+    '''
+    CodeBlockTable tag.  Creates the CodeBlock Table.
+    '''
     IndentSpaces = ' ' * self._ForcedOffset
     Line = (' ' * self._ForcedOffset) + 'self.CodeBlockTable = ('
     IndentSpaces = ' ' * len(Line)
     for CodeBlockName in self._SMSResult.CodeBlockNames:
-      if self._SMSResult.CodeBlocks[CodeBlockName].Type == 'Method':
-        CBEntry = 'CBEntryDef(CBB.{0}, compile(self.__{0}__, MFName, "exec")),\n'.format(CodeBlockName)
-      else:
-        CBEntry = 'CBEntryDef(CBB.{0}, compile(self.{0}, MFName, "exec")),\n'.format(CodeBlockName)
+      CBEntry = 'CBEntryDef(CBB.{0}, compile(__{0}__, MFName, "exec")),\n'.format(CodeBlockName)
       Line += CBEntry + IndentSpaces
       
     Line = Line.rstrip(' ')
@@ -197,24 +222,32 @@ class _CPythonLan(_CBase):
     self._STMFileFh.write(Line)
     
     #--------------------------------------------------------------------------
+  def _Methods(self):
+    '''
+    Methods tag.  Creates all the methods that are needed for the 
+    code block table.
+    '''
+    CBCnt = 0
+    for CodeBlockName in self._SMSResult.CodeBlocks.keys():
+      CBCnt += 1
+      Line = ' ' * self._ForcedOffset + '  #--------------------------------------------------------------------------\n'
+      Line +=  ' ' * self._ForcedOffset + 'def ' + CodeBlockName + '(self):\n'
+      Line +=  ' ' * self._ForcedOffset + '  pass\n'
+      if CBCnt != len(self._SMSResult.CodeBlocks.keys()):
+        Line += "\n"
+      self._STMFileFh.write(Line)
+
+    #--------------------------------------------------------------------------
   def _CodeBlocks(self):
     '''
     CodeBlocks tag.  Creates all the code blocks that are needed for the 
     code block table.
     '''
-    # TODO: Only create the Code ones not the Method ones.  
     CBCnt = 0
-    for CodeBlockName, CodeBlock in self._SMSResult.CodeBlocks.items():
+    for CodeBlockName in self._SMSResult.CodeBlocks.keys():
       CBCnt += 1
-      Line = ' ' * self._ForcedOffset
-
-      if CodeBlock.Type == 'Method':
-        Line = ' ' * self._ForcedOffset + '__' + CodeBlockName + '__ = \'self.' + CodeBlockName + '()\'\n'
-        if CBCnt != len(self._SMSResult.CodeBlocks.keys()):
-          Line += "\n"
-        self._STMFileFh.write(Line)
-      else:
-        self._STMFileFh.write("'''\n\n")
+      Line = ' ' * self._ForcedOffset + '__' + CodeBlockName + '__ = \'self.' + CodeBlockName + '()\''
+      self._STMFileFh.write(Line + '\n')
 
     #--------------------------------------------------------------------------
   def _StateNames(self):

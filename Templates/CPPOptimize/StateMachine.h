@@ -1,9 +1,11 @@
+//@@CPP@@
+#pragma once
 /*
-SMS User Author:  Donald W. Long
-SMS User Date:    01/22/2021
-SMS User Version: 1.0
-Creation Date:    03/23/21
-SMS File Version: 1.0
+SMS User Author:  @@SMSUserAuthor@@
+SMS User Date:    @@SMSUserDate@@
+SMS User Version: @@SMSUserVersion@@
+Creation Date:    @@CreationDate@@
+SMS File Version: @@SMSFileVersion@@  
 TPL Date:         02/11/2021
 TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
@@ -26,19 +28,38 @@ CopyRight:
 -----------------------------------------------------------------------------
 Description:
 
-  The state machine
+  An example state machine that copies the files from one dir to another.
 -----------------------------------------------------------------------------
 */
-#pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <stdarg.h>
+#include <iostream>
+//#include <filesystem>
+//#include <fstream>
+//#include <list>
 
-#include <stdio.h>
+class CStateMachine
+{
+public:
+  std::ostream *TraceFh;
+  std::ostream *LogFileFh;
 
-extern void ST_Run(FILE *_TraceFh, FILE *_LogFh);
+  CStateMachine(std::ostream *TraceFh, std::ostream *LogFileFh) :
+                TraceFh(TraceFh), LogFileFh(LogFileFh) {};
 
-#ifdef __cplusplus
-}
-#endif
+  void Run(void);
+
+private:
+  CStateMachine();
+
+  std::string Log(const char *_MsgType, int _ArgCnt, ...);
+  char *CStateMachine::BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue);
+  char *CStateMachine::StringBuild(char *_msg, const int _stringCnt, ...);
+  char *CStateMachine::StringBuildVaList(char *_msg, const int _stringCnt, va_list args);
+  
+  //@@CodeBlockValues:2@@
+
+  //@@STIValues:2@@
+
+  //@@StateTable:2@@
+};

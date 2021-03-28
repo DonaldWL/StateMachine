@@ -1,9 +1,10 @@
+/*@@Java@@*/
 /*
-SMS User Author:  Donald W. Long
-SMS User Date:    01/22/2021
-SMS User Version: 1.0
-Creation Date:    03/23/21
-SMS File Version: 1.0
+SMS User Author:  @@SMSUserAuthor@@
+SMS User Date:    @@SMSUserDate@@
+SMS User Version: @@SMSUserVersion@@
+Creation Date:    @@CreationDate@@
+SMS File Version: @@SMSFileVersion@@  
 TPL Date:         02/11/2021
 TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
@@ -26,19 +27,15 @@ CopyRight:
 -----------------------------------------------------------------------------
 Description:
 
-  The state machine
+  An example state machine that copies the files from one dir to another.
+  This is all the generated variables and tables for the state machine.
 -----------------------------------------------------------------------------
 */
-#pragma once
+class CSMT
+{
+  //@@CodeBlockValues:2@@
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+  //@@STIValues:2@@
 
-#include <stdio.h>
-
-extern void ST_Run(FILE *_TraceFh, FILE *_LogFh);
-
-#ifdef __cplusplus
+  //@@StateTable:2@@
 }
-#endif

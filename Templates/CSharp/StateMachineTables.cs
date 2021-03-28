@@ -1,6 +1,12 @@
-'''
-Created:   Feb 21, 2021
-Author:    Donald W. Long (Donald.W.Long@gmail.com)
+﻿/*@@CSharp@@*/
+/*
+SMS User Author:  @@SMSUserAuthor@@
+SMS User Date:    @@SMSUserDate@@
+SMS User Version: @@SMSUserVersion@@
+Creation Date:    @@CreationDate@@
+SMS File Version: @@SMSFileVersion@@  
+TPL Date:         02/11/2021
+TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
 CopyRight:
 
@@ -19,13 +25,30 @@ CopyRight:
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -----------------------------------------------------------------------------
-Update History:
-  Feb 21, 2021 - Donald W. Long (Donald.W.Long@gmail.com)
-    Released
------------------------------------------------------------------------------
-'''
+Description:
 
-from .StateMachine import (CodeBlockEntryDef, 
-                           CStateMachine,
-                           StateTableEntryDef,
-                           StateMachineError)
+  An example state machine that copies the files from one dir to another.
+  This is all the generated variables and tables for the state machine.
+-----------------------------------------------------------------------------
+*/
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ExampleCSharp
+{
+  class CSMT
+  {
+    //@@CodeBlockNames:4@@
+    
+    //@@CodeBlockValues:4@@
+
+    //@@StateNames:4@@
+    
+    //@@StateValues:4@@
+
+    //@@STIValues:4@@
+
+    //@@StateTable:4@@
+  }
+}

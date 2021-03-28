@@ -1,10 +1,9 @@
-//*@@C@@*/
 /*
-SMS User Author:  @@SMSUserAuthor@@
-SMS User Date:    @@SMSUserDate@@
-SMS User Version: @@SMSUserVersion@@
-Creation Date:    @@CreationDate@@
-SMS File Version: @@SMSFileVersion@@
+SMS User Author:  Donald W. Long
+SMS User Date:    01/22/2021
+SMS User Version: 1.0
+Creation Date:    03/23/21
+SMS File Version: 1.0
 TPL Date:         02/11/2021
 TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
@@ -36,17 +35,62 @@ Description:
 extern "C" {
 #endif
 
-/*@@CodeBlockNames:0@@*/
+#define CBLen 7
+const char *CodeBlockNames[CBLen] = {"CloseFiles",
+                                     "CopyFile",
+                                     "EndMachine",
+                                     "GetFiles",
+                                     "NextFile",
+                                     "OpenFiles",
+                                     "StartMachine"};
 
-/*@@CodeBlockValues:0@@*/
+enum CB {
+  CB_CloseFiles = 0,
+  CB_CopyFile = 1,
+  CB_EndMachine = 2,
+  CB_GetFiles = 3,
+  CB_NextFile = 4,
+  CB_OpenFiles = 5,
+  CB_StartMachine = 6
+};
 
-/*@@StateNames:0@@*/
+#define SNLen 8
+const char *StateNames[SNLen] = {"CloseFiles",
+                                 "CloseFilesError",
+                                 "CopyFile",
+                                 "EndState",
+                                 "GetFiles",
+                                 "NextFile",
+                                 "OpenFiles",
+                                 "StartState"};
 
-/*@@StateValues:0@@*/
+enum ST {
+  ST_CloseFiles = 0,
+  ST_CloseFilesError = 1,
+  ST_CopyFile = 2,
+  ST_EndState = 3,
+  ST_GetFiles = 4,
+  ST_NextFile = 5,
+  ST_OpenFiles = 6,
+  ST_StartState = 7
+};
 
-/*@@STIValues:0@@*/
+enum STI {
+  STI_CBIdx = 0,
+  STI_StateIdx = 1,
+  STI_StateLenIdx = 2,
+  STI_StatesIdx = 3
+};
 
-/*@@StateTable:0@@*/
+#define STLen 55
+const int StateTable[STLen] = {CB_CloseFiles, ST_CloseFiles, 3, 32, 21, 21, -1,         /* 0 (NextFile, EndState, EndState), -1 */
+                               CB_CloseFiles, ST_CloseFilesError, 3, 21, 21, 21, -1,    /* 7 (EndState, EndState, EndState), -1 */
+                               CB_CopyFile, ST_CopyFile, 3, 0, 7, 7, -1,                /* 14 (CloseFiles, CloseFilesError, CloseFilesError), -1 */
+                               CB_EndMachine, ST_EndState, 1, 21, -1,                   /* 21 (EndState), -1 */
+                               CB_GetFiles, ST_GetFiles, 2, 32, 21, -1,                 /* 26 (NextFile, EndState), -1 */
+                               CB_NextFile, ST_NextFile, 6, 42, 21, 21, 42, 21, 32, -1, /* 32 (OpenFiles, EndState, EndState, OpenFiles, EndState, NextFile), -1 */
+                               CB_OpenFiles, ST_OpenFiles, 3, 14, 7, 7, -1,             /* 42 (CopyFile, CloseFilesError, CloseFilesError), -1 */
+                               CB_StartMachine, ST_StartState, 2, 26, 21, -1};          /* 49 (GetFiles, EndState), -1 */
 
 #ifdef __cplusplus
 }

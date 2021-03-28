@@ -53,6 +53,7 @@ class _CJavaLan(_CBase):
     self._CmdExec['SMSUserVersion'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.Version.Value)
     self._CmdExec['SMSFileVersion'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.SMSFileVersion.Value)
     self._CmdExec['CodeBlockNames'] = self.CmdExecDef(self._CodeBlockNames, None)
+    self._CmdExec['CodeBlocks'] = self.CmdExecDef(self._CodeBlocks, None)
     self._CmdExec['CodeBlockValues'] = self.CmdExecDef(self._CodeBlockValues, None)
     self._CmdExec['StateNames'] = self.CmdExecDef(self._StateNames, None)
     self._CmdExec['StateValues'] = self.CmdExecDef(self._StateValues, None)
@@ -178,10 +179,7 @@ class _CJavaLan(_CBase):
     '''
     Create the code block enum.
     ''' 
-    LineIndent = (' ' * self._ForcedOffset) + '  '
     Line = ''
-    if self._ForcedOffset == 0:
-      LineIndent = '  '
     for Indx in range(0, len(self._SMSResult.CodeBlockNames)):
       Line += '{0}public static final int CB_{1} = {2};\n'.format((' ' * self._ForcedOffset), 
                                                                   self._SMSResult.CodeBlockNames[Indx],
@@ -210,14 +208,26 @@ class _CJavaLan(_CBase):
       Line = LineIndent
 
     #--------------------------------------------------------------------------
+  def _CodeBlocks(self):
+    '''
+    CodeBlocks tag.  Creates the code blocks within the switch statement
+    '''
+    FirstCase = True
+    for CodeBlockName in self._SMSResult.CodeBlockNames:
+      Line = ' ' * self._ForcedOffset
+      if not FirstCase:
+        Line = '\n' + Line
+      FirstCase = False
+      Line += 'case CSMT.CB_' + CodeBlockName + ':\n'
+      self._STMFileFh.write(Line)
+      self._STMFileFh.write(' ' * self._ForcedOffset + '  break;\n')
+
+    #--------------------------------------------------------------------------
   def _StateValues(self):
     '''
     Create the enum for states.
     '''
-    LineIndent = (' ' * self._ForcedOffset) + '  '
     Line = ''
-    if self._ForcedOffset == 0:
-      LineIndent = '  '
     for Indx in range(0, len(self._SMSResult.StateNames)):
       Line += '{0}public static final int ST_{1} = {2};\n'.format((' ' * self._ForcedOffset), 
                                                                   self._SMSResult.StateNames[Indx],

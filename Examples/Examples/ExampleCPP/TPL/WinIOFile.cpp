@@ -1,9 +1,10 @@
+//@@CPP@@
 /*
-SMS User Author:  Donald W. Long
-SMS User Date:    01/22/2021
-SMS User Version: 1.0
-Creation Date:    03/23/21
-SMS File Version: 1.0
+SMS User Author:  @@SMSUserAuthor@@
+SMS User Date:    @@SMSUserDate@@
+SMS User Version: @@SMSUserVersion@@
+Creation Date:    @@CreationDate@@
+SMS File Version: @@SMSFileVersion@@
 TPL Date:         02/11/2021
 TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
@@ -26,19 +27,20 @@ CopyRight:
 -----------------------------------------------------------------------------
 Description:
 
-  The state machine
+  The windows implementation for IOFile.
 -----------------------------------------------------------------------------
 */
-#pragma once
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+#include <windows.h>
+#include <io.h>
 #include <stdio.h>
+#include <filesystem>
 
-extern void ST_Run(FILE *_TraceFh, FILE *_LogFh);
+constexpr auto BUFSIZE = 4096;
 
-#ifdef __cplusplus
+bool IsAtty(FILE *Fh)
+{
+  if (!_isatty(_fileno(Fh))) {
+    return false;
+  }
+  return true;
 }
-#endif

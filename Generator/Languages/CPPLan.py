@@ -175,16 +175,12 @@ class _CCPPLan(_CBase):
     '''
     FirstCase = True
     for CodeBlockName in self._SMSResult.CodeBlockNames:
-      CodeBlock = self._SMSResult.CodeBlocks[CodeBlockName]
       Line = ' ' * self._ForcedOffset
       if not FirstCase:
         Line = '\n' + Line
       FirstCase = False
-      Line += 'case ' + CodeBlockName + ':\n'
+      Line += 'case CB_' + CodeBlockName + ':\n'
       self._STMFileFh.write(Line)
-      
-      for CodeLine in CodeBlock.CodeLines:
-        self._STMFileFh.write(' ' * self._ForcedOffset + '  ' + CodeLine.Line + '\n')
       self._STMFileFh.write(' ' * self._ForcedOffset + '  break;\n')
 
     #--------------------------------------------------------------------------

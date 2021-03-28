@@ -1,0 +1,6 @@
+#@@CopyFile@@
+from SCons.Environment import Environment
+
+env = Environment()
+
+env.Java('classes', 'Src')

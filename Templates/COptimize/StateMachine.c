@@ -1,9 +1,10 @@
+/*@@C@@*/
 /*
-SMS User Author:  Donald W. Long
-SMS User Date:    01/22/2021
-SMS User Version: 1.0
-Creation Date:    03/23/21
-SMS File Version: 1.0
+SMS User Author:  @@SMSUserAuthor@@
+SMS User Date:    @@SMSUserDate@@
+SMS User Version: @@SMSUserVersion@@
+Creation Date:    @@CreationDate@@
+SMS File Version: @@SMSFileVersion@@
 TPL Date:         02/11/2021
 TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
@@ -35,10 +36,6 @@ Description:
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-/*
-#include <string.h>
-#include <ctype.h>
-*/
 
 #include "StateMachine.h"
 #include "StateMachineTables.h"
@@ -73,7 +70,7 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
   FILE *TraceFh = _TraceFh;
   LogFh = _LogFh;
 
-  int CurStateIndx = 49;
+  int CurStateIndx = @@StartStateValue@@;
   int PrevCurStateIndx = CurStateIndx;
   int OtherWise = -1;
   int StateRValue = -1;
@@ -82,41 +79,7 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
   while (ProcessStates) {
     switch (StateTable[CurStateIndx + STI_CBIdx]) {
 
-      case CB_CloseFiles:
-        printf("CB_CloseFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_CopyFile:
-        printf("CB_CopyFile\n");
-        StateRValue = 1;
-        break;
-
-      case CB_EndMachine:
-        printf("CB_EndMachine\n");
-        StateRValue = 0;
-        ProcessStates = false;
-        break;
-
-      case CB_GetFiles:
-        printf("CB_GetFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_NextFile:
-        printf("CB_NextFile\n");
-        StateRValue = 0;
-        break;
-
-      case CB_OpenFiles:
-        printf("CB_OpenFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_StartMachine:
-        printf("CB_StartMachine\n");
-        StateRValue = 0;
-        break;
+      @@CodeBlocks@@
       
       default:
         char *Msg = BuildMsg("Invalid CodeBlock => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
@@ -127,28 +90,6 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
         break;
     }
 
-    if (StateRValue < 0) {
-      char *Msg = BuildMsg("StateRValue is negative => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
-                           CurStateIndx, StateRValue);
-      Log("Error", 1, Msg);
-      free(Msg);
-      ProcessStates = false;
-      break;
-    }
-
-    OtherWise = -1;
-    if (StateRValue > StateTable[CurStateIndx + STI_StateLenIdx]) {
-      OtherWise = StateTable[CurStateIndx + STI_StateLenIdx + StateTable[CurStateIndx + STI_StateLenIdx] + 1];
-      if (OtherWise < 0) {
-        char *Msg = BuildMsg("No Otherwise found => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
-                             CurStateIndx, StateRValue);
-        Log("Error", 1, Msg);
-        free(Msg);
-        ProcessStates = false;
-        break;
-      }
-    }
-
     if (TraceFh != NULL) {
       char *Msg;
       struct tm newtime;
@@ -157,39 +98,24 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
       time_t now = time(NULL);
       localtime_s(&newtime, &now);
       strftime(tDateTime, 30, "%F %T: ", &newtime);
+
+      char StateIndx[20];
+      _itoa_s(CurStateIndx, StateIndx, 20, 10);
+
+      char CBIndx[20];
+      _itoa_s(StateTable[CurStateIndx + STI_CBIdx], CBIndx, 20, 10);
+
       char RValue[20];
       _itoa_s(StateRValue, RValue, 20, 10);
 
-        // Format is yyyy-mm-dd HH:MM:SS: <statename>,<codeblockname>,<StateRValue>
-      Msg = StringBuild(NULL, 7, tDateTime, StateNames[StateTable[CurStateIndx + STI_StateIdx]], ",",
-                        CodeBlockNames[StateTable[CurStateIndx + STI_CBIdx]], ",",
-                        RValue, "\n");
+        // Format is yyyy-mm-dd HH:MM:SS: <StateIndx>,<CBIndx>,<StateRValue>
+      Msg = StringBuild(NULL, 7, tDateTime, StateIndx, ",", CBIndx, ",", RValue, "\n");
       fprintf(TraceFh, Msg);
       free(Msg);
     }
 
     PrevCurStateIndx = CurStateIndx;
-    if (OtherWise > -1) {
-      CurStateIndx = OtherWise;
-    } else {
-      CurStateIndx = StateTable[CurStateIndx + STI_StatesIdx + StateRValue];
-    }
-    if (CurStateIndx > STLen) {
-      char *Msg = BuildMsg("Index into state table out of range => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
-                           PrevCurStateIndx, StateRValue);
-      Log("Error", 1, Msg);
-      free(Msg);
-      ProcessStates = false;
-      break;
-    }
-  }
-
-    /* If the user did not set to exit the loop then error */
-  if (ProcessStates) {
-    char *Msg = BuildMsg("Exited the main loop => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
-                         CurStateIndx, StateRValue);
-    Log("Error", 1, Msg);
-    free(Msg);
+    CurStateIndx = StateTable[CurStateIndx + STI_StatesIdx + StateRValue];
   }
 }
 
@@ -225,6 +151,7 @@ static char *BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue)
   char Cmd[101] = "";
   size_t MsgTLen = strlen(MsgT);
   size_t MsgIndx = 0;
+  char MyString[100];
 
   Msg = StringBuild(Msg, 1, "ERROR: ");
 
@@ -243,13 +170,14 @@ static char *BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue)
           TMsgLen = 0;
         }
         if (!strcmp(Cmd, "SN")) {
-          Msg = StringBuild(Msg, 1, StateNames[StateTable[CurStateIndx + STI_StateIdx]]);
+          _itoa_s(CurStateIndx, MyString, 100, 10);
+          Msg = StringBuild(Msg, 1, MyString);
         } else if (!strcmp(Cmd, "BN")) {
-          Msg = StringBuild(Msg, 1, CodeBlockNames[StateTable[CurStateIndx + STI_StateIdx]]);
+          _itoa_s(StateTable[CurStateIndx + STI_CBIdx], MyString, 100, 10);
+          Msg = StringBuild(Msg, 1, MyString);
         } else if (!strcmp(Cmd, "RV")) {
-          char StateRValueString[100];
-          _itoa_s(StateRValue, StateRValueString, 100, 10);
-          Msg = StringBuild(Msg, 1, StateRValueString);
+          _itoa_s(StateRValue, MyString, 100, 10);
+          Msg = StringBuild(Msg, 1, MyString);
         } else {
           TMsg[TMsgLen] = '{';
           TMsgLen++;

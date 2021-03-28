@@ -1,9 +1,10 @@
+//@@CPP@@
 /*
-SMS User Author:  Donald W. Long
-SMS User Date:    01/22/2021
-SMS User Version: 1.0
-Creation Date:    03/23/21
-SMS File Version: 1.0
+SMS User Author:  @@SMSUserAuthor@@
+SMS User Date:    @@SMSUserDate@@
+SMS User Version: @@SMSUserVersion@@
+Creation Date:    @@CreationDate@@
+SMS File Version: @@SMSFileVersion@@  
 TPL Date:         02/11/2021
 TPL Author:       Donald W. Long (Donald.W.Long@gmail.com)
 -----------------------------------------------------------------------------
@@ -26,54 +27,20 @@ CopyRight:
 -----------------------------------------------------------------------------
 Description:
 
-  The State machine
+  An example state machine that copies the files from one dir to another.
 -----------------------------------------------------------------------------
 */
-
-#include <stdio.h> 
-#include <stdbool.h> 
-#include <time.h>
 #include <stdarg.h>
-#include <stdlib.h>
-/*
-#include <string.h>
-#include <ctype.h>
-*/
+#include <filesystem>
 
 #include "StateMachine.h"
-#include "StateMachineTables.h"
 
-  /* This is how big each block length is.  When more
-   * memory is needed it is allocated in this increament.
-   */
-#define STRINGBLOCKLEN 128
+#define STRINGBLOCKLEN 128  // Size of our memeory for strings to allocate.
 
-  /* Used to log what the user code is doing.  This has nothing to do with
-   * tracing the state machine
-   */
-static void Log(const char *_MsgType, int _ArgCnt, ...);
 
-  /* Used to build up messages for the state machine.  It is manly for
-   * errors.
-   */
-static char *BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue);
-
-  /* Used to build a message up.  Only takes string inthe args.
-  */
-static char *StringBuild(char *_msg, const int _stringCnt, ...);
-static char *StringBuildVaList(char *_msg, const int _stringCnt, va_list args);
-
-  /* Is the log file handle to use for logging.  This has nothing to do with
-   * tracing the state machine.
-   */
-static FILE *LogFh = NULL;
-
-void ST_Run(FILE *_TraceFh, FILE *_LogFh)
+void CStateMachine::Run(void)
 {
-  FILE *TraceFh = _TraceFh;
-  LogFh = _LogFh;
-
-  int CurStateIndx = 49;
+  int CurStateIndx = @@StartStateValue@@;
   int PrevCurStateIndx = CurStateIndx;
   int OtherWise = -1;
   int StateRValue = -1;
@@ -82,42 +49,8 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
   while (ProcessStates) {
     switch (StateTable[CurStateIndx + STI_CBIdx]) {
 
-      case CB_CloseFiles:
-        printf("CB_CloseFiles\n");
-        StateRValue = 0;
-        break;
+      @@CodeBlocks@@
 
-      case CB_CopyFile:
-        printf("CB_CopyFile\n");
-        StateRValue = 1;
-        break;
-
-      case CB_EndMachine:
-        printf("CB_EndMachine\n");
-        StateRValue = 0;
-        ProcessStates = false;
-        break;
-
-      case CB_GetFiles:
-        printf("CB_GetFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_NextFile:
-        printf("CB_NextFile\n");
-        StateRValue = 0;
-        break;
-
-      case CB_OpenFiles:
-        printf("CB_OpenFiles\n");
-        StateRValue = 0;
-        break;
-
-      case CB_StartMachine:
-        printf("CB_StartMachine\n");
-        StateRValue = 0;
-        break;
-      
       default:
         char *Msg = BuildMsg("Invalid CodeBlock => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
                              PrevCurStateIndx, StateRValue);
@@ -125,7 +58,7 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
         free(Msg);
         ProcessStates = false;
         break;
-    }
+    };
 
     if (StateRValue < 0) {
       char *Msg = BuildMsg("StateRValue is negative => State: {SN}  CodeBlock: {BN}  StateRValue: {RV}",
@@ -150,22 +83,16 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
     }
 
     if (TraceFh != NULL) {
-      char *Msg;
       struct tm newtime;
-      char tDateTime[30];
-
-      time_t now = time(NULL);
+      time_t now = time(0);
+      char buffer[30];
       localtime_s(&newtime, &now);
-      strftime(tDateTime, 30, "%F %T: ", &newtime);
-      char RValue[20];
-      _itoa_s(StateRValue, RValue, 20, 10);
+      strftime(buffer, 30, "%F %T: ", &newtime);
 
         // Format is yyyy-mm-dd HH:MM:SS: <statename>,<codeblockname>,<StateRValue>
-      Msg = StringBuild(NULL, 7, tDateTime, StateNames[StateTable[CurStateIndx + STI_StateIdx]], ",",
-                        CodeBlockNames[StateTable[CurStateIndx + STI_CBIdx]], ",",
-                        RValue, "\n");
-      fprintf(TraceFh, Msg);
-      free(Msg);
+      *TraceFh << buffer << StateNames[StateTable[CurStateIndx + STI_StateIdx]] << "," <<
+                  CodeBlockNames[StateTable[CurStateIndx + STI_CBIdx]] << "," <<
+                  StateRValue << std::endl;
     }
 
     PrevCurStateIndx = CurStateIndx;
@@ -193,14 +120,15 @@ void ST_Run(FILE *_TraceFh, FILE *_LogFh)
   }
 }
 
-static void Log(const char *_MsgType, int _ArgCnt, ...)
+std::string CStateMachine::Log(const char *_MsgType, int _ArgCnt, ...)
 {
-  char *Msg = NULL;
+  std::string Msg;
+  std::string MsgBase;
   struct tm newtime;
   char tDateTime[30];
 
 
-  if (LogFh != NULL) {
+  if (LogFileFh != nullptr) {
     va_list args;
     va_start(args, _ArgCnt);
 
@@ -208,16 +136,25 @@ static void Log(const char *_MsgType, int _ArgCnt, ...)
     localtime_s(&newtime, &now);
     strftime(tDateTime, 30, "%F %T: ", &newtime);
 
-    Msg = StringBuild(Msg, 3, tDateTime, _MsgType, ": ");
-    Msg = StringBuildVaList(Msg, _ArgCnt, args);
-    Msg = StringBuild(Msg, 1, "\n");
-    fprintf(LogFh, Msg);
+    Msg = tDateTime;
+    Msg += _MsgType;
+    MsgBase = _MsgType;
+    Msg += ": ";
+    MsgBase += ": ";
+
+    for (int i = 0; i < _ArgCnt; i++) {
+      char *arg = va_arg(args, char *);
+      Msg += arg;
+      MsgBase += arg;
+    }
+    *LogFileFh << Msg << std::endl;
+    MsgBase += '\n';
     va_end(args);
-    free(Msg);
   }
+  return MsgBase;
 }
 
-static char *BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue)
+char *CStateMachine::BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue)
 {
   char *Msg = NULL;
   char TMsg[101] = "";
@@ -282,7 +219,7 @@ static char *BuildMsg(const char *MsgT, int CurStateIndx, int StateRValue)
   return Msg;
 }
 
-char *StringBuild(char *_msg, const int _stringCnt, ...)
+char *CStateMachine::StringBuild(char *_msg, const int _stringCnt, ...)
 {
   va_list args;
   va_start(args, _stringCnt);
@@ -291,7 +228,7 @@ char *StringBuild(char *_msg, const int _stringCnt, ...)
   return _msg;
 }
 
-static char *StringBuildVaList(char *_msg, const int _stringCnt, va_list args)
+char *CStateMachine::StringBuildVaList(char *_msg, const int _stringCnt, va_list args)
 {
   char *string;
   size_t stringLen;
@@ -302,7 +239,7 @@ static char *StringBuildVaList(char *_msg, const int _stringCnt, va_list args)
 
     /* Setup the Msg. */
   if (_msg == NULL) {
-    _msg = malloc(STRINGBLOCKLEN);
+    _msg = (char *) malloc(STRINGBLOCKLEN);
     _msg[0] = '\0';
     MsgLen = 0;
     MsgBlockLen = STRINGBLOCKLEN;
@@ -320,7 +257,7 @@ static char *StringBuildVaList(char *_msg, const int _stringCnt, va_list args)
     NewMsgBlockLen = MsgBlockLen;
     for (; MsgLen + stringLen + 1 > NewMsgBlockLen; NewMsgBlockLen += STRINGBLOCKLEN);
     if (MsgLen + stringLen + 1 > MsgBlockLen) {
-      char *NewMsg = malloc(NewMsgBlockLen);
+      char *NewMsg = (char *) malloc(NewMsgBlockLen);
       memcpy(NewMsg, _msg, MsgBlockLen);
       MsgBlockLen = NewMsgBlockLen;
       free(_msg);

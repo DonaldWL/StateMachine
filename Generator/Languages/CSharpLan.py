@@ -53,6 +53,7 @@ class _CCSharpLan(_CBase):
     self._CmdExec['SMSUserVersion'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.Version.Value)
     self._CmdExec['SMSFileVersion'] = self.CmdExecDef(self._CmdReplacement, self._SMSResult.SMSFileVersion.Value)
     self._CmdExec['CodeBlockNames'] = self.CmdExecDef(self._CodeBlockNames, None)
+    self._CmdExec['CodeBlocks'] = self.CmdExecDef(self._CodeBlocks, None)
     self._CmdExec['CodeBlockValues'] = self.CmdExecDef(self._CodeBlockValues, None)
     self._CmdExec['StateNames'] = self.CmdExecDef(self._StateNames, None)
     self._CmdExec['StateValues'] = self.CmdExecDef(self._StateValues, None)
@@ -205,6 +206,21 @@ class _CCSharpLan(_CBase):
         Line += '"};\n'  
       self._STMFileFh.write(Line)
       Line = LineIndent
+
+    #--------------------------------------------------------------------------
+  def _CodeBlocks(self):
+    '''
+    CodeBlocks tag.  Creates the code blocks within the switch statement
+    '''
+    FirstCase = True
+    for CodeBlockName in self._SMSResult.CodeBlockNames:
+      Line = ' ' * self._ForcedOffset
+      if not FirstCase:
+        Line = '\n' + Line
+      FirstCase = False
+      Line += 'case CSMT.CB_' + CodeBlockName + ':\n'
+      self._STMFileFh.write(Line)
+      self._STMFileFh.write(' ' * self._ForcedOffset + '  break;\n')
 
     #--------------------------------------------------------------------------
   def _StateValues(self):
